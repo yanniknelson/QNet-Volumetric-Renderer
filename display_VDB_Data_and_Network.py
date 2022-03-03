@@ -12,7 +12,6 @@ pw1 = weights["pw1"]
 pb1 = weights["pb1"]
 pw2 = weights["pw2"]
 pb2 = weights["pb2"]
-np.shape(pb2)
 
 model = torch.nn.Sequential(torch.nn.Linear(3,500), torch.nn.Sigmoid(), torch.nn.Linear(500,1))
 
@@ -31,14 +30,16 @@ for i in range(63):
 data = torch.tensor(data, dtype=torch.float32)
 
 
-res = model(data)
+res = np.reshape(model(data).detach().numpy(),(63, 117))
+
+res = (res+1)/2
 
 array = np.load("fluid_data_0083_numpy_array.npy")
 
 fig, (ax1, ax2) = plt.subplots(1,2)
 
 plot1 = ax1.imshow(array[58].T, origin="lower")
-plot2 = ax2.imshow(np.reshape(res.detach().numpy(),(63, 117)), origin="lower")
+plot2 = ax2.imshow(res, origin="lower")
 # ax1.subplots_adjust( bottom=0.25)
 
 axamp = plt.axes([0.1, 0.1, 0.65, 0.03])
@@ -54,7 +55,13 @@ def update(val):
     plot1.set_data(array[int(val)].T)
     for i in range(63*117):
         data[i][0] = (val/58)-1
-    plot2.set_data(np.reshape(model(data).detach().numpy(),(63, 117)))
+    
+    res = np.reshape(model(data).detach().numpy(),(63, 117))
+    res = (res+1)/2
+    print("data min and max: ", np.min(array[int(val)]), np.max(array[int(val)]))
+    print("neural min and max: ", np.min(res), np.max(res))
+    print()
+    plot2.set_data(res)
 
 slice_slider.on_changed(update)
 
