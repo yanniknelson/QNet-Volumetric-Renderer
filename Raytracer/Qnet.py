@@ -1,5 +1,6 @@
 from Ray import *
 import scipy.io as scio
+import matplotlib.pyplot as plt
 import torch
 
 
@@ -56,14 +57,16 @@ class Intergrator():
         self.B2 = B2
 
     def Transform(self, startpos, dir):
-        dir = -dir/np.linalg.norm(dir)
+        dir = dir/np.linalg.norm(dir)
         b = np.array([1,0,0])
         v = np.cross(dir, b)
+        v[2] = -v[2]
         c = dir[0] # a dot b (will select the first element of b, so skip calculation)
         skew = np.array([[0, -v[2], v[1]],[v[2],0,-v[0]],[-v[1], v[0], 0]])
-        rot = torch.tensor(np.eye(3) + skew + np.dot(skew, skew)/(1+c), dtype=type, device=device)
-        self.B1 = self.baseB1 + torch.matmul(self.baseW1, torch.tensor(startpos, dtype=type, device=device))
-        self.W1 = torch.matmul(self.baseW1, rot)
+        self.rot = torch.tensor(np.eye(3) + skew + np.dot(skew, skew)/(1+c), dtype=type, device=device)
+        self.c = torch.tensor(startpos, dtype=type, device=device)
+        self.B1 = self.baseB1 + torch.matmul(self.baseW1, self.c)
+        self.W1 = torch.matmul(self.baseW1, self.rot)
 
     def TransformRay(self, ray):
         self.Transform(ray.o, ray.dir)
@@ -108,13 +111,13 @@ class Intergrator():
 # data = torch.tensor(np.concatenate((xs,ys,zs), axis=1), dtype=type, device=device)
 
 
-# start = 1
+# start = 0
 # stop = 2
 
 # with torch.no_grad():
 #     res = (model(data).cpu().detach().numpy() +1)/2
 #     qnet = Intergrator(pw1, pb1, pw2, pb2)
-#     qnet.Transform(np.array([0,0,-1]), np.array([0, 0, 1]))
+#     qnet.Transform(np.array([0,0,1]), np.array([0, 0, -1]))
 #     print((qnet.apply(start, stop) + stop - start)/2)
 
 # plt.plot(np.reshape(np.linspace(-1,1,200), (200,1)), res)
