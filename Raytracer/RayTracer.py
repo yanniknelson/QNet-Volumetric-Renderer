@@ -6,13 +6,11 @@ from Camera import *
 image = []
 
 
-width = 100
-height = 100
-pos = np.array([0, 4, 0])
+width = 200
+height = 200
+pos = np.array([0, 4, 2])
 up = np.array([0,0,1])
 lookat = np.array([0,0,0])
-
-found = False
 
 with torch.no_grad():
     weights = scio.loadmat("../MATLABtest/volume_weights.mat")
@@ -32,17 +30,8 @@ with torch.no_grad():
                 ray = c.GenerateRay(x,y)
                 hit, t0, t1 = vol.intersect(ray)
                 if hit:
-                    # print(t1-t0)
                     qnet.Transform(ray.o + t0 * ray.d, ray.d)
                     image[y].append(torch.sigmoid((qnet.apply(0, t1-t0) + (t1-t0))/2).item())
-                    if (not found):
-                        found = True
-                        print("entry point = ", ray.o+t0*ray.d)
-                        print("dir = ", ray.d)
-                        print("M = ", qnet.rot)
-                        # np.det
-                        print("c = ", qnet.c)
-                    # print(qnet.apply(0, t1-t0).cpu().detach().numpy()[0][0])
                 else:
                     image[y].append(-float('inf'))
                 bar()

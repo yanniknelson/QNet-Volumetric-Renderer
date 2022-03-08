@@ -59,9 +59,8 @@ class Intergrator():
     def Transform(self, startpos, dir):
         dir = dir/np.linalg.norm(dir)
         b = np.array([1,0,0])
-        v = np.cross(dir, b)
-        v[2] = -v[2]
-        c = dir[0] # a dot b (will select the first element of b, so skip calculation)
+        v = np.cross(b, dir)
+        c = dir[0] # dir dot b (will select the first element of b, so skip calculation)
         skew = np.array([[0, -v[2], v[1]],[v[2],0,-v[0]],[-v[1], v[0], 0]])
         self.rot = torch.tensor(np.eye(3) + skew + np.dot(skew, skew)/(1+c), dtype=type, device=device)
         self.c = torch.tensor(startpos, dtype=type, device=device)
@@ -87,38 +86,3 @@ class Intergrator():
 
         return self.model(res.T)
 
-
-# weights = scio.loadmat("../MATLABtest/volume_weights.mat")
-# pw1 = torch.tensor(weights["pw1"], dtype=type, device=device)
-# pb1 = torch.squeeze(torch.tensor(weights["pb1"], dtype=type, device=device))
-# pw2 = torch.tensor(weights["pw2"], dtype=type, device=device)
-# pb2 = torch.squeeze(torch.tensor(weights["pb2"], dtype=type, device=device))
-
-# model = torch.nn.Sequential(torch.nn.Linear(3,500, device=device), torch.nn.Sigmoid(), torch.nn.Linear(500,1, device=device))
-
-# model[0].weight = torch.nn.Parameter(pw1)
-# model[0].bias = torch.nn.Parameter(pb1)
-# model[2].weight = torch.nn.Parameter(pw2)
-# model[2].bias = torch.nn.Parameter(pb2)
-
-# yslice = 0
-# zslice = 0
-
-# zs = np.reshape(np.linspace(-1,1,200),(200,1))
-# ys = np.reshape(np.linspace(yslice,yslice,200), (200,1))
-# xs = np.reshape(np.linspace(zslice,zslice,200), (200,1))
-
-# data = torch.tensor(np.concatenate((xs,ys,zs), axis=1), dtype=type, device=device)
-
-
-# start = 0
-# stop = 2
-
-# with torch.no_grad():
-#     res = (model(data).cpu().detach().numpy() +1)/2
-#     qnet = Intergrator(pw1, pb1, pw2, pb2)
-#     qnet.Transform(np.array([0,0,1]), np.array([0, 0, -1]))
-#     print((qnet.apply(start, stop) + stop - start)/2)
-
-# plt.plot(np.reshape(np.linspace(-1,1,200), (200,1)), res)
-# plt.show()
