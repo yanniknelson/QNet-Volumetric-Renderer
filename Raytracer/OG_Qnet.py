@@ -48,32 +48,40 @@ class Intergrator():
     def train(self, W1, B1, W2, B2):
         self.baseW1 = W1
         self.baseB1 = B1
+        self.baseW2 = W2
         self.baseB2 = B2
-        self.model = torch.nn.Linear(W2.size(1),1, dtype=type,device=device)
-        self.model.weight = torch.nn.Parameter(W2)
-        self.model.bias = torch.nn.Parameter(self.baseB2)
 
-    def IntegrateRay(self, ray, t0, t1):
-        #transform weights
-        dir = ray.d/np.linalg.norm(ray.d)
+        self.W1 = W1
+        self.B1 = B1
+        self.W2 = W2
+        self.B2 = B2
+
+    def Transform(self, startpos, dir):
+        dir = dir/np.linalg.norm(dir)
         b = np.array([1,0,0])
         v = np.cross(b, dir)
         c = dir[0] # dir dot b (will select the first element of b, so skip calculation)
         skew = np.array([[0, -v[2], v[1]],[v[2],0,-v[0]],[-v[1], v[0], 0]])
         self.rot = torch.tensor(np.eye(3) + skew + np.dot(skew, skew)/(1+c), dtype=type, device=device)
-        self.c = torch.tensor(ray.o + ray.d * t0, dtype=type, device=device)
-        B1 = self.baseB1 + torch.matmul(self.baseW1, self.c)
-        W1 = torch.matmul(self.baseW1, self.rot)
-        #slice
-        xDim = W1[:,:1] # get the x weights 
-        yzDims = W1[:, 1:] # get the z and y weights
-        newb1 = B1 + yzDims.matmul(torch.tensor([0,0],dtype=type, device=device)) # update bais
-        #intergrate over interval 0-(t1-t0)
-        self.qnet.model[0].weight[0][0] = -(t1-t0)
-        self.qnet.model[0].weight[1][0] = 0
-        #integrate
+        self.c = torch.tensor(startpos, dtype=type, device=device)
+        self.B1 = self.baseB1 + torch.matmul(self.baseW1, self.c)
+        self.W1 = torch.matmul(self.baseW1, self.rot)
+
+    def TransformRay(self, ray):
+        self.Transform(ray.o, ray.dir)
+
+    def apply(self, start = -1, end = 1):
+        # Slicing the Z and Y dimensions
+        xDim = self.W1[:,:1] # get the x weights 
+        yzDims = self.W1[:, 1:] # get the z and y weights
+        newb1 = self.B1 + yzDims.matmul(torch.tensor([0,0],dtype=type, device=device)) # update bais
+        self.qnet.model[0].weight[0][0] = -end
+        self.qnet.model[0].weight[1][0] = -start
         y = torch.cat((xDim, newb1.reshape(xDim.size(0),1)), axis=1)
-        res = torch.div(self.qnet(y), torch.prod(xDim, axis = 1).reshape(xDim.size(0),1)) + (t1-t0)
-        self.model.bias = torch.nn.Parameter(self.baseB2*(t1-t0))
+        res = torch.div(self.qnet(y), torch.prod(xDim, axis = 1).reshape(xDim.size(0),1)) + end-start
+        self.model = torch.nn.Linear(self.W2.size(1),1, dtype=type,device=device)
+        self.model.weight = torch.nn.Parameter(self.W2)
+        self.model.bias = torch.nn.Parameter(self.B2*(end-start))#2**self.dim))
+
         return self.model(res.T)
 
