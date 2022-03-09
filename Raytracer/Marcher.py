@@ -5,21 +5,30 @@ class Marcher:
     def __init__(self, bottom_left, top_right, volumefilepath):
         self.lowest = np.array([0,0,0])
         self.bottom_left = bottom_left
+        self.top_right = top_right
         self.volume = np.load(volumefilepath)
         self.voxel_counts = np.shape(self.volume)
         self.voxel_counts = np.array([self.voxel_counts[0], self.voxel_counts[1], self.voxel_counts[2]])
-        self.voxel_size = (top_right - self.bottom_left)/self.voxel_counts
+        self.voxel_size = (self.top_right - self.bottom_left)/self.voxel_counts
         pass
 
     def get_containing_voxel(self, point, direction):
         #calculate the steps for the direction
         steps = (direction < 0) * -2 + 1
+
         #claculate t values of direction to produce each of the voxel dimension sizes
         deltas = abs(np.divide(self.voxel_size,direction))
-        #find the maximum t vlues for the direction that can be moved before crossing a voxel
-        tmaxs = np.abs(np.divide((self.voxel_size-((point-self.bottom_left) % self.voxel_size)), direction))
+
         #find the voxel coord of the voxel that contains the point
         vox_coord = np.floor((point-self.bottom_left)/ self.voxel_size)
+
+        point_modulo = point % self.voxel_size
+
+        #find the maximum t vlues for the direction that can be moved before crossing a voxel
+        tmaxs = direction * 0
+        tmaxs[(direction < 0)] = point_modulo[(direction < 0)]
+        tmaxs[(direction > 0)] = self.voxel_size[(direction > 0)] - point_modulo[(direction > 0)]
+        
         return vox_coord, steps, deltas, tmaxs
 
     def trace_no_scaling(self, point, direction):
@@ -47,6 +56,7 @@ class Marcher:
                 out_of_range_count = out_of_range_count + 1
             if out_of_range_count == 4:
                 break
+        return total
 
     def trace_scaling(self, point, direction):
         index, steps, deltas, tmaxs = self.get_containing_voxel(point, direction)
@@ -65,10 +75,10 @@ class Marcher:
                     dim = 1
                 else:
                     dim = 2
+
             #if the voxel just traversed was in the volume, add the density of that voxel scaled by the distance travelled in that volume
             if not(np.any(index >= self.voxel_counts) or np.any(index < self.lowest)):
                 total = total + tmaxs[dim] * self.volume[int(index[0])][int(index[1])][int(index[2])]
-                # print(total)
 
             #increment the voxel coordinate
             index[dim] = index[dim] + steps[dim]
