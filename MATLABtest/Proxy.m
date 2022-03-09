@@ -75,8 +75,11 @@ classdef Proxy
                 disp('          Using parallel comp.')                                
             end
             
-            [xn,obj.xs] = mapminmax(x);
-            [yn,obj.ys] = mapminmax(fx);
+            %[xn,obj.xs] = mapminmax(x);
+            %[yn,obj.ys] = mapminmax(fx);
+
+            xn = x;
+            yn = fx;
 
             obj.fnet.trainParam.showWindow = true;
             

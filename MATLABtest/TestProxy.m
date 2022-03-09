@@ -46,9 +46,7 @@ data = (x(:,x(3,:) == 0));
 expec = reshape(y(x(3,:) == 0), 117,117);
 disp(size(data));
 
-
 imagesc(expec);
-
 
 xs = repmat(0.5, 1, 117);
 zs = linspace(-1,1,117);
