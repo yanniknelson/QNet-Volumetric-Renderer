@@ -40,9 +40,9 @@ class Qnet(torch.nn.Module):
 
 class Intergrator():
     def __init__(self, W1 = None, B1 = None, W2 = None, B2 = None):
-        self.qnet = Qnet(1)
         if (W1 is None) or (B1 is None) or (W2 is None) or (B2 is None):
             return
+        self.qnet = Qnet(1)
         self.train(W1, B1, W2, B2)
 
     def train(self, W1, B1, W2, B2):

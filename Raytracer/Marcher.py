@@ -2,7 +2,9 @@ import numpy as np
 
 class Marcher:
 
-    def __init__(self, bottom_left, top_right, volumefilepath):
+    def __init__(self, bottom_left = None, top_right = None, volumefilepath = None):
+        if (bottom_left is None) or (top_right is None) or (volumefilepath is None):
+            return
         self.lowest = np.array([0,0,0])
         self.bottom_left = bottom_left
         self.top_right = top_right
