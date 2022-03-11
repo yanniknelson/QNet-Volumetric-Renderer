@@ -1,4 +1,5 @@
 from mpi4py import MPI 
+from mpi4py.util import dtlib
 from Qnet import *
 from Marcher import Marcher
 from Camera import *
@@ -7,12 +8,25 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank() # get your process ID
 
+np.seterr(divide='ignore')
+
 width = 100
 height = 100
 
-pos = np.array([0, 0, 4])
-up = np.array([1,0,0])
+pos = np.array([4, 4, 2])
+up = np.array([0,0,1])
 lookat = np.array([0,0,0])
+
+start_time = None
+
+np_dtype = dtlib.to_numpy_dtype(MPI.DOUBLE)
+image_win_size = ((MPI.DOUBLE.Get_size() * width * height) if (rank == 0) else (0))
+
+image_win = MPI.Win.Allocate_shared(image_win_size, MPI.DOUBLE.Get_size(), comm=comm)
+
+buf, itemsize = image_win.Shared_query(0) 
+assert itemsize == MPI.DOUBLE.Get_size() 
+image = np.ndarray(buffer=buf, dtype='d', shape=(height,width))
 
 with torch.no_grad():
 
@@ -39,45 +53,39 @@ with torch.no_grad():
     else:
         marcher = Marcher()
         qnet = Intergrator()
+
     h = int(height)
     w = int(width/size)
-
-    recv = np.empty((h, w), dtype=np.float)
-    # for i in range(size):
-    #     recv.append()
 
     work = comm.scatter(work, root=0)
     qnet = comm.bcast(qnet, root=0)
     marcher = comm.bcast(marcher, root=0)
-    
+
+    comm.Barrier()
+
+    if rank == 0:
+        start_time = MPI.Wtime()
 
     c = Camera(height, width, 35, pos, up, lookat)
     vol = Bounds3(np.array([-1,1,1]), np.array([1,-1,-1]))
-
-    print(work[0])
 
     for (x, y) in work:
         ray = c.GenerateRay(x,y)
         hit, t0, t1 = vol.intersect(ray)
         if hit:
             intersectionPoint = ray.o + t0* ray.d
-            recv[y][x - int(rank*(width/size))] = marcher.trace_scaling(intersectionPoint, ray.d)
-            # qnet.Transform(intersectionPoint, ray.d)
-            # recv[y][x - int(rank*(width/size))] = (torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item())
+            # image[y][x] = marcher.trace_scaling(intersectionPoint, ray.d)
+            image[y][x] = torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item()
         else:
-            recv[y][x - int(rank*(width/size))] = -float('inf')
+            image[y][x] = -float('inf')
 
-data = comm.gather(recv, root=0)
+comm.Barrier()
 
 if rank == 0:
-    print(len(data))
-    image = []
-    for y in range(height):
-        image.append([])
-    for w in range(size):
-        for y in range(height):
-            for x in range(int(width/size)):
-                image[y].append(data[w][y][x])
+    end_time = MPI.Wtime()
+
+if rank == 0:
+    print(end_time-start_time)
     im = plt.imshow(np.array(image))
     plt.colorbar(im)
     plt.show()

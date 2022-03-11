@@ -5,6 +5,7 @@ import torch
 
 
 device = torch.device("cuda:0")
+device = torch.device("cpu")
 type = torch.float64
 
 class Poly1(torch.nn.Module):
