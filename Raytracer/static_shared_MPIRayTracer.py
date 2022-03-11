@@ -10,8 +10,8 @@ rank = comm.Get_rank() # get your process ID
 
 np.seterr(divide='ignore')
 
-width = 100
-height = 100
+width = 400
+height = 400
 
 pos = np.array([4, 4, 2])
 up = np.array([0,0,1])
@@ -85,7 +85,7 @@ if rank == 0:
     end_time = MPI.Wtime()
 
 if rank == 0:
-    print(end_time-start_time)
+    print(end_time-start_time, flush=True)
     im = plt.imshow(np.array(image))
     plt.colorbar(im)
     plt.show()

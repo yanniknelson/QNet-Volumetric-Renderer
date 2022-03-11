@@ -78,7 +78,7 @@ if rank == 0:
     end_time = MPI.Wtime()
 
 if rank == 0:
-    print(end_time-start_time)
+    print(end_time-start_time, flush=True)
     image = []
     for y in range(height):
         image.append([])
