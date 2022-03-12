@@ -126,8 +126,10 @@ classdef Proxy
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function ftx = EvalProxy(obj, x)
             N = network(obj.fnet) ;
-            xmap = (mapminmax('apply', x, obj.xs)) ;
-            ftx = mapminmax('reverse', N(xmap, 'UseGPU', obj.EnableGPUComp), obj.ys) ;
+            %xmap = (mapminmax('apply', x, obj.xs)) ;
+            xmap = x;
+            %ftx = mapminmax('reverse', N(xmap, 'UseGPU', obj.EnableGPUComp), obj.ys) ;
+            ftx = N(xmap, 'UseGPU', obj.EnableGPUComp);
         end
         
         

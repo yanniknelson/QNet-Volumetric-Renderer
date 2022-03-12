@@ -58,6 +58,14 @@ traintime = toc(trainst) ;
 
 res = reshape(p.EvalProxy(data), 117, 117);
 
+pw1 = p.w1;
+pb1 = p.b1;
+pw2 = p.w2;
+pb2 = p.b2;
+
+%save('volume_weights_v', 'pw1', 'pb1', 'pw2', 'pb2')
+
+
 
 disp(size(res));
 imagesc(res);

@@ -57,7 +57,7 @@ comm.Barrier()
 with torch.no_grad():
 
     if rank == 0:
-        weights = scio.loadmat("../MATLABtest/volume_weights_v1.mat")
+        weights = scio.loadmat("../MATLABtest/volume_weights_v2.mat")
         pw1 = torch.tensor(weights["pw1"], dtype=type, device=device)
         pb1 = torch.squeeze(torch.tensor(weights["pb1"], dtype=type, device=device))
         pw2 = torch.tensor(weights["pw2"], dtype=type, device=device)
@@ -97,7 +97,7 @@ with torch.no_grad():
             ray = c.GenerateRay(x,y)
             hit, t0, t1 = vol.intersect(ray)
             if hit:
-                image[y][x] = torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item()
+                image[y][x] = torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item()#qnet.IntegrateRay(ray, t0, t1) + (t1-t0)*0.4
 
         go_again = False
 

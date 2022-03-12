@@ -7,7 +7,7 @@ import scipy.io as scio
 
 df = pd.read_pickle("fluid_data_0083_dataframe.pkl")
 
-weights = scio.loadmat("MATLABtest/volume_weights.mat")
+weights = scio.loadmat("MATLABtest/volume_weights_v2.mat")
 pw1 = weights["pw1"]
 pb1 = weights["pb1"]
 pw2 = weights["pw2"]
