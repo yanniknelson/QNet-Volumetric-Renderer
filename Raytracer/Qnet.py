@@ -58,13 +58,16 @@ class Intergrator():
         #transform weights
         dir = ray.d/np.linalg.norm(ray.d)
         b = np.array([1,0,0])
-        v = np.cross(b, dir)
-        c = dir[0] # dir dot b (will select the first element of b, so skip calculation)
-        skew = np.array([[0, -v[2], v[1]],[v[2],0,-v[0]],[-v[1], v[0], 0]])
-        self.rot = torch.tensor(np.eye(3) + skew + np.dot(skew, skew)/(1+c), dtype=type, device=device)
+        rot = np.array([[-1, 0, 0],[0,-1,0],[0,0,1]])
+        if np.any(dir != -b):
+            v = np.cross(b, dir)
+            c = dir[0] # dir dot b (will select the first element of b, so skip calculation)
+            skew = np.array([[0, -v[2], v[1]],[v[2],0,-v[0]],[-v[1], v[0], 0]])
+            rot = np.eye(3) + skew + np.dot(skew, skew)/(1+c)
+        rot = torch.tensor(rot, dtype=type, device=device)
         self.c = torch.tensor(ray.o + ray.d * t0, dtype=type, device=device)
         B1 = self.baseB1 + torch.matmul(self.baseW1, self.c)
-        W1 = torch.matmul(self.baseW1, self.rot)
+        W1 = torch.matmul(self.baseW1, rot)
         #slice
         xDim = W1[:,:1] # get the x weights 
         yzDims = W1[:, 1:] # get the z and y weights
