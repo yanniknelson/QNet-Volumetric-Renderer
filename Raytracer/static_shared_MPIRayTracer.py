@@ -10,8 +10,8 @@ rank = comm.Get_rank() # get your process ID
 
 np.seterr(divide='ignore')
 
-width = 400
-height = 400
+width = 100
+height = 100
 
 pos = np.array([4, 0, 0])
 up = np.array([0,0,1])
@@ -109,11 +109,14 @@ if rank == 0:
     voxel_time = end_time - start_time
 
 if rank == 0:
+    fig, axes = plt.subplots(1,2)
     print("qnet render time = ", qnet_time, flush=True)
     print("voxel render time = ", voxel_time, flush=True)
-    im = plt.imshow(np.array(image))
-    plt.colorbar(im)
-    plt.show()
-    im = plt.imshow(np.array(ref))
-    plt.colorbar(im)
+    RMSE = np.sqrt(np.mean((ref-image)**2))
+    print("RMSE = ", RMSE, flush=True)
+    print("RE = ", RMSE/np.mean(ref), flush=True)
+    im = axes[0].imshow(np.array(image))
+    fig.colorbar(im, ax=axes[0])
+    rf = axes[1].imshow(np.array(ref))
+    fig.colorbar(rf, ax=axes[1])
     plt.show()

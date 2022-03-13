@@ -30,7 +30,7 @@ class Marcher:
         tmaxs = direction * 0
         tmaxs[(direction < 0)] = point_modulo[(direction < 0)]/direction[(direction<0)]
         tmaxs[(direction > 0)] = (self.voxel_size[(direction > 0)] - point_modulo[(direction > 0)])/direction[(direction>0)]
-        
+        tmaxs= np.abs(tmaxs)
 
         return vox_coord, steps, deltas, tmaxs
 
