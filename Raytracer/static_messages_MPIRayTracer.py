@@ -40,13 +40,16 @@ with torch.no_grad():
         marcher = Marcher()
         qnet = Intergrator()
 
-    h = int(height)
-    w = int(width/size)
+    comm.barrier()
 
-    recv = np.empty((h, w), dtype=np.float)
     work = comm.scatter(work, root=0)
     qnet = comm.bcast(qnet, root=0)
     marcher = comm.bcast(marcher, root=0)
+
+    h = int(height)
+    w = int(np.shape(work)[0]/height)
+
+    recv = np.empty((h, w), dtype=np.float)
 
     comm.Barrier()
 
