@@ -20,8 +20,18 @@ class Bounds3:
         t1 = float('inf')
         for i in range(3):
             invRayDir = 1/ray.d[i]
-            tNear = (self.pMin[i] - ray.o[i]) * invRayDir
-            tFar = (self.pMax[i] - ray.o[i]) * invRayDir
+            
+            if invRayDir == float('inf'):
+                tNear = float('inf')
+                tFar = float('inf')
+                if (self.pMin[i] - ray.o[i]) == 0:
+                    tNear = 0
+                if (self.pMax[i] - ray.o[i]) == 0:
+                    tFar = 0
+            else:
+                tNear = (self.pMin[i] - ray.o[i]) * invRayDir
+                tFar = (self.pMax[i] - ray.o[i]) * invRayDir
+
             if (tNear > tFar):
                 tNear, tFar = tFar, tNear
                 tFar *= 1 + 2 * ((3* np.finfo(float).eps)/(1-3* np.finfo(float).eps))
