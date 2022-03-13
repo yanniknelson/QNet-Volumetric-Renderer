@@ -13,8 +13,8 @@ np.seterr(divide='ignore')
 width = 100
 height = 100
 
-pos = np.array([4, 0, 0])
-up = np.array([0,0,1])
+pos = np.array([0, 0, 4])
+up = np.array([1,0,0])
 lookat = np.array([0,0,0])
 
 qnet_time = 0
@@ -38,7 +38,7 @@ with torch.no_grad():
 
     work = None
     if rank == 0:
-        weights = scio.loadmat("../MATLABtest/volume_weights_v1.mat")
+        weights = scio.loadmat("../MATLABtest/volume_weights_v2.mat")
         
         qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"])
 
@@ -78,7 +78,7 @@ with torch.no_grad():
         ray = c.GenerateRay(x,y)
         hit, t0, t1 = vol.intersect(ray)
         if hit:
-            image[y][x] = torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item()
+            image[y][x] = max(torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item() - 0.5, 0)*(4*0.9)
 
 comm.Barrier()
 

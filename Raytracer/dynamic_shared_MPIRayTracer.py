@@ -11,13 +11,13 @@ rank = comm.Get_rank() # get your process ID
 
 np.seterr(divide='ignore')
 
-width = 400
-height = 400
+width = 100
+height = 100
 
 total = width * height
 
-pos = np.array([4, 4, 2])
-up = np.array([0,0,1])
+pos = np.array([0, 0, 4])
+up = np.array([1,0,0])
 lookat = np.array([0,0,0])
 
 start_time = None
