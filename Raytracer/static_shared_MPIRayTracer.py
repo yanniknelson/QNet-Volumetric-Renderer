@@ -34,6 +34,30 @@ ref_win = MPI.Win.Allocate_shared(image_win_size, dtype.Get_size(), comm=comm)
 buf, itemsize = ref_win.Shared_query(0) 
 ref = np.ndarray(buffer=buf, dtype='d', shape=(height,width))
 
+#create volume data shared memory
+vol_win_size = 0
+volume = None
+shape = 0
+if rank == 0:
+    volume = np.load("../fluid_data_0083_numpy_array.npy")
+    vol_win_size = dtype.Get_size() * np.size(volume)
+    shape = np.shape(volume)
+
+shape = comm.bcast(shape, root=0)
+
+vol_win = MPI.Win.Allocate_shared(vol_win_size, dtype.Get_size(), comm=comm)
+buf, itemsize = vol_win.Shared_query(0) 
+volume_data = np.ndarray(buffer=buf, dtype='d', shape=shape)
+
+if rank == 0:
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            for k in range(shape[2]):
+                volume_data[i][j][k] = volume[i][j][k]
+    volume = None
+
+marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), volume_data)
+
 with torch.no_grad():
 
     work = None
@@ -41,8 +65,6 @@ with torch.no_grad():
         weights = scio.loadmat("../MATLABtest/volume_weights_v2.mat")
         
         qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"])
-
-        marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), "../fluid_data_0083_numpy_array.npy")
 
         work = []
         for w in range(size):
@@ -53,12 +75,10 @@ with torch.no_grad():
                 for x in range(xstart, xend):
                     work[w].append((x,y))
     else:
-        marcher = Marcher()
         qnet = Intergrator()
 
     work = comm.scatter(work, root=0)
     qnet = comm.bcast(qnet, root=0)
-    marcher = comm.bcast(marcher, root=0)
 
     c = Camera(height, width, 35, pos, up, lookat)
     vol = Bounds3(np.array([-1,1,1]), np.array([1,-1,-1]))

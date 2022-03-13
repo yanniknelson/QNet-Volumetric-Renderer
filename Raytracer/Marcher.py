@@ -2,13 +2,13 @@ import numpy as np
 
 class Marcher:
 
-    def __init__(self, bottom_left = None, top_right = None, volumefilepath = None):
-        if (bottom_left is None) or (top_right is None) or (volumefilepath is None):
+    def __init__(self, bottom_left = None, top_right = None, volume = None):
+        if (bottom_left is None) or (top_right is None) or (volume is None):
             return
         self.lowest = np.array([0,0,0])
         self.bottom_left = bottom_left
         self.top_right = top_right
-        self.volume = np.load(volumefilepath)
+        self.volume = volume
         self.voxel_counts = np.shape(self.volume)
         self.voxel_counts = np.array([self.voxel_counts[0], self.voxel_counts[1], self.voxel_counts[2]])
         self.voxel_size = (self.top_right - self.bottom_left)/self.voxel_counts
