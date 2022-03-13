@@ -11,12 +11,12 @@ rank = comm.Get_rank() # get your process ID
 
 np.seterr(divide='ignore')
 
-width = 100
-height = 100
+width = 400
+height = 400
 
 total = width * height
 
-pos = np.array([-4, 0, 0])
+pos = np.array([4, 4, 2])
 up = np.array([0,0,1])
 lookat = np.array([0,0,0])
 
@@ -59,12 +59,8 @@ with torch.no_grad():
 
     if rank == 0:
         weights = scio.loadmat("../MATLABtest/volume_weights_v2.mat")
-        pw1 = torch.tensor(weights["pw1"], dtype=type, device=device)
-        pb1 = torch.squeeze(torch.tensor(weights["pb1"], dtype=type, device=device))
-        pw2 = torch.tensor(weights["pw2"], dtype=type, device=device)
-        pb2 = torch.squeeze(torch.tensor(weights["pb2"], dtype=type, device=device))
 
-        qnet = Intergrator(pw1, pb1, pw2, pb2)
+        qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"])
 
         marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), "../fluid_data_0083_numpy_array.npy")
 
@@ -146,7 +142,7 @@ while go_again:
     if counter[0] < total:
         go_again = True
         start = int(counter[0])
-        counter[0] = min(start + batchsize, total)#int((start + batchsize) % (total+1))
+        counter[0] = min(start + batchsize, total)
     counter_win.Unlock_all()
 
 comm.Barrier()

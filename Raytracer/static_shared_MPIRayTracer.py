@@ -39,12 +39,8 @@ with torch.no_grad():
     work = None
     if rank == 0:
         weights = scio.loadmat("../MATLABtest/volume_weights_v1.mat")
-        pw1 = torch.tensor(weights["pw1"], dtype=type, device=device)
-        pb1 = torch.squeeze(torch.tensor(weights["pb1"], dtype=type, device=device))
-        pw2 = torch.tensor(weights["pw2"], dtype=type, device=device)
-        pb2 = torch.squeeze(torch.tensor(weights["pb2"], dtype=type, device=device))
-
-        qnet = Intergrator(pw1, pb1, pw2, pb2)
+        
+        qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"])
 
         marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), "../fluid_data_0083_numpy_array.npy")
 

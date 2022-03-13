@@ -47,9 +47,10 @@ class Intergrator():
         self.train(W1, B1, W2, B2)
 
     def train(self, W1, B1, W2, B2):
-        self.baseW1 = W1
-        self.baseB1 = B1
-        self.baseB2 = B2
+        W2 = torch.tensor(W2, dtype=type, device=device)
+        self.baseW1 = torch.tensor(W1, dtype=type, device=device)
+        self.baseB1 = torch.squeeze(torch.tensor(B1, dtype=type, device=device))
+        self.baseB2 = torch.squeeze(torch.tensor(B2, dtype=type, device=device))
         self.model = torch.nn.Linear(W2.size(1),1, dtype=type,device=device)
         self.model.weight = torch.nn.Parameter(W2)
         self.model.bias = torch.nn.Parameter(self.baseB2)
