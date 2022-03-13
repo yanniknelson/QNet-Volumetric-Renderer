@@ -9,8 +9,8 @@ rank = comm.Get_rank() # get your process ID
 
 np.seterr(divide='ignore')
 
-width = 100
-height = 100
+width = 400
+height = 400
 
 qnet_time = 0
 voxel_time = 0

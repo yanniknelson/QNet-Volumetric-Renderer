@@ -10,8 +10,8 @@ rank = comm.Get_rank() # get your process ID
 
 np.seterr(divide='ignore')
 
-width = 100
-height = 100
+width = 400
+height = 400
 
 pos = np.array([0, 0, 4])
 up = np.array([1,0,0])
@@ -55,9 +55,6 @@ with torch.no_grad():
     else:
         marcher = Marcher()
         qnet = Intergrator()
-
-    h = int(height)
-    w = int(width/size)
 
     work = comm.scatter(work, root=0)
     qnet = comm.bcast(qnet, root=0)

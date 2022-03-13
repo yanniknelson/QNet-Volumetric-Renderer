@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 import torch
 
 
-device = torch.device("cuda:0")
-device = torch.device("cpu")
 type = torch.float64
 
 class Poly1(torch.nn.Module):
@@ -18,7 +16,7 @@ class Poly1(torch.nn.Module):
         return -torch.log(1 - (-torch.exp(x)))
 
 class Qnet(torch.nn.Module):
-    def __init__(self, dimension):
+    def __init__(self, dimension, device):
         super().__init__()
         with torch.no_grad():
             self.model = torch.nn.Sequential(torch.nn.Linear(dimension+1, 2**dimension, bias=False, dtype=type, device=device), 
@@ -40,18 +38,22 @@ class Qnet(torch.nn.Module):
         return self.model(x)
 
 class Intergrator():
-    def __init__(self, W1 = None, B1 = None, W2 = None, B2 = None):
+    def __init__(self, W1 = None, B1 = None, W2 = None, B2 = None, gpu = False):
         if (W1 is None) or (B1 is None) or (W2 is None) or (B2 is None):
             return
-        self.qnet = Qnet(1)
+        if gpu:
+            self.device = torch.device("cuda:0")
+        else:
+            self.device = torch.device("cpu")
+        self.qnet = Qnet(1, self.device)
         self.train(W1, B1, W2, B2)
 
     def train(self, W1, B1, W2, B2):
-        W2 = torch.tensor(W2, dtype=type, device=device)
-        self.baseW1 = torch.tensor(W1, dtype=type, device=device)
-        self.baseB1 = torch.squeeze(torch.tensor(B1, dtype=type, device=device))
-        self.baseB2 = torch.squeeze(torch.tensor(B2, dtype=type, device=device))
-        self.model = torch.nn.Linear(W2.size(1),1, dtype=type,device=device)
+        W2 = torch.tensor(W2, dtype=type, device=self.device)
+        self.baseW1 = torch.tensor(W1, dtype=type, device=self.device)
+        self.baseB1 = torch.squeeze(torch.tensor(B1, dtype=type, device=self.device))
+        self.baseB2 = torch.squeeze(torch.tensor(B2, dtype=type, device=self.device))
+        self.model = torch.nn.Linear(W2.size(1),1, dtype=type,device=self.device)
         self.model.weight = torch.nn.Parameter(W2)
         self.model.bias = torch.nn.Parameter(self.baseB2)
 
@@ -65,14 +67,14 @@ class Intergrator():
             c = dir[0] # dir dot b (will select the first element of b, so skip calculation)
             skew = np.array([[0, -v[2], v[1]],[v[2],0,-v[0]],[-v[1], v[0], 0]])
             rot = np.eye(3) + skew + np.dot(skew, skew)/(1+c)
-        rot = torch.tensor(rot, dtype=type, device=device)
-        c = torch.tensor(ray.o + ray.d * t0, dtype=type, device=device)
+        rot = torch.tensor(rot, dtype=type, device=self.device)
+        c = torch.tensor(ray.o + ray.d * t0, dtype=type, device=self.device)
         B1 = self.baseB1 + torch.matmul(self.baseW1, c)
         W1 = torch.matmul(self.baseW1, rot)
         #slice
         xDim = W1[:,:1] # get the x weights 
         yzDims = W1[:, 1:] # get the z and y weights
-        newb1 = B1 + yzDims.matmul(torch.tensor([0,0],dtype=type, device=device)) # update bais
+        newb1 = B1 + yzDims.matmul(torch.tensor([0,0],dtype=type, device=self.device)) # update bais
         #intergrate over interval 0-(t1-t0)
         self.qnet.model[0].weight[0][0] = -(t1-t0)
         self.qnet.model[0].weight[1][0] = 0

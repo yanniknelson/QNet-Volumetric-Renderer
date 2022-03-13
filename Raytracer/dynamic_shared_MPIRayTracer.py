@@ -11,8 +11,8 @@ rank = comm.Get_rank() # get your process ID
 
 np.seterr(divide='ignore')
 
-width = 100
-height = 100
+width = 400
+height = 400
 
 total = width * height
 
@@ -67,9 +67,6 @@ with torch.no_grad():
     else:
         marcher = Marcher()
         qnet = Intergrator()
-
-    h = int(height)
-    w = int(width/size)
 
     qnet = comm.bcast(qnet, root=0)
     marcher = comm.bcast(marcher, root=0)
