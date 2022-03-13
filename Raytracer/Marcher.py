@@ -24,7 +24,7 @@ class Marcher:
         #find the voxel coord of the voxel that contains the point
         vox_coord = np.floor((point-self.bottom_left)/ self.voxel_size)
 
-        point_modulo = point % self.voxel_size
+        point_modulo = (point-self.bottom_left) % self.voxel_size
 
         #find the maximum t vlues for the direction that can be moved before crossing a voxel
         tmaxs = direction * 0

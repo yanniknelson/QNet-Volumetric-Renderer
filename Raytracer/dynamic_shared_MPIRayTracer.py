@@ -16,7 +16,7 @@ height = 100
 
 total = width * height
 
-pos = np.array([0, 4, 0])
+pos = np.array([-4, 0, 0])
 up = np.array([0,0,1])
 lookat = np.array([0,0,0])
 
