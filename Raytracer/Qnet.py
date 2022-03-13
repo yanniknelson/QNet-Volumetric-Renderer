@@ -65,8 +65,8 @@ class Intergrator():
             skew = np.array([[0, -v[2], v[1]],[v[2],0,-v[0]],[-v[1], v[0], 0]])
             rot = np.eye(3) + skew + np.dot(skew, skew)/(1+c)
         rot = torch.tensor(rot, dtype=type, device=device)
-        self.c = torch.tensor(ray.o + ray.d * t0, dtype=type, device=device)
-        B1 = self.baseB1 + torch.matmul(self.baseW1, self.c)
+        c = torch.tensor(ray.o + ray.d * t0, dtype=type, device=device)
+        B1 = self.baseB1 + torch.matmul(self.baseW1, c)
         W1 = torch.matmul(self.baseW1, rot)
         #slice
         xDim = W1[:,:1] # get the x weights 

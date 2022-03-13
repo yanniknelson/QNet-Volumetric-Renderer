@@ -10,12 +10,12 @@ rank = comm.Get_rank() # get your process ID
 
 np.seterr(divide='ignore')
 
-width = 400
-height = 400
+width = 100
+height = 100
 
 total = width * height
 
-pos = np.array([4, 0, 0])
+pos = np.array([4, 4, 2])
 up = np.array([0,0,1])
 lookat = np.array([0,0,0])
 
@@ -91,13 +91,14 @@ with torch.no_grad():
         start_time = MPI.Wtime()
 
     while go_again:
-        for i in range(start, int((start+batchsize)%(total+1))):
+        for i in range(start, min(start + batchsize, total)):#int((start+batchsize)%(total+1))):
             y = i//width
             x = i%height
             ray = c.GenerateRay(x,y)
             hit, t0, t1 = vol.intersect(ray)
             if hit:
-                image[y][x] = torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item()#qnet.IntegrateRay(ray, t0, t1) + (t1-t0)*0.4
+                # image[y][x] = torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item()#qnet.IntegrateRay(ray, t0, t1) + (t1-t0)*0.4
+                image[y][x] = max(torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item() - 0.5, 0)*(4*0.9)
 
         go_again = False
 
@@ -144,7 +145,7 @@ while go_again:
     if counter[0] < total:
         go_again = True
         start = int(counter[0])
-        counter[0] = int((start + batchsize) % (total+1))
+        counter[0] = min(start + batchsize, total)#int((start + batchsize) % (total+1))
     counter_win.Unlock_all()
 
 comm.Barrier()
@@ -158,6 +159,7 @@ if rank == 0:
     print("voxel render time = ", voxel_time, flush=True)
     RMSE = np.sqrt(np.mean((ref-image)**2))
     print("RMSE = ", RMSE, flush=True)
+    print("RE = ", RMSE/np.mean(ref), flush=True)
     im = plt.imshow(np.array(image))
     plt.colorbar(im)
     plt.show()

@@ -28,9 +28,10 @@ class Marcher:
 
         #find the maximum t vlues for the direction that can be moved before crossing a voxel
         tmaxs = direction * 0
-        tmaxs[(direction < 0)] = point_modulo[(direction < 0)]
-        tmaxs[(direction > 0)] = self.voxel_size[(direction > 0)] - point_modulo[(direction > 0)]
+        tmaxs[(direction < 0)] = point_modulo[(direction < 0)]/direction[(direction<0)]
+        tmaxs[(direction > 0)] = (self.voxel_size[(direction > 0)] - point_modulo[(direction > 0)])/direction[(direction>0)]
         
+
         return vox_coord, steps, deltas, tmaxs
 
     def trace_no_scaling(self, point, direction):
