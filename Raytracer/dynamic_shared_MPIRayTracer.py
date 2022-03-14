@@ -16,8 +16,8 @@ height = 400
 
 total = width * height
 
-pos = np.array([0, 0, 4])
-up = np.array([1,0,0])
+pos = np.array([4, 0, 0])
+up = np.array([0,0,1])
 lookat = np.array([0,0,0])
 
 start_time = None
@@ -60,7 +60,7 @@ with torch.no_grad():
     if rank == 0:
         weights = scio.loadmat("../MATLABtest/volume_weights_v2.mat")
 
-        qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"])
+        qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"], False, weights["yoffset"], weights["ymin"], weights["yrange"])
 
         marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), "../fluid_data_0083_numpy_array.npy")
 
@@ -85,14 +85,13 @@ with torch.no_grad():
         start_time = MPI.Wtime()
 
     while go_again:
-        for i in range(start, min(start + batchsize, total)):#int((start+batchsize)%(total+1))):
+        for i in range(start, min(start + batchsize, total)):
             y = i//width
             x = i%height
             ray = c.GenerateRay(x,y)
             hit, t0, t1 = vol.intersect(ray)
             if hit:
-                # image[y][x] = torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item()#qnet.IntegrateRay(ray, t0, t1) + (t1-t0)*0.4
-                image[y][x] = max(torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item() - 0.5, 0)*(4*0.9)
+                image[y][x] = qnet.IntegrateRay(ray, t0, t1)
 
         go_again = False
 

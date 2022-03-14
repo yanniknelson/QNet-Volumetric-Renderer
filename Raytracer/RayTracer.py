@@ -26,7 +26,7 @@ voxel_time = 0
 with torch.no_grad():
     weights = scio.loadmat("../MATLABtest/volume_weights_v2.mat")
 
-    qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"])
+    qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"], False, weights["yoffset"], weights["ymin"], weights["yrange"])
 
     c = Camera(height, width, 35, pos, up, lookat)
     vol = Bounds3(np.array([-1,1,1]), np.array([1,-1,-1]))

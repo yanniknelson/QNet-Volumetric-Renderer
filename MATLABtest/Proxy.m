@@ -75,11 +75,9 @@ classdef Proxy
                 disp('          Using parallel comp.')                                
             end
             
-            %[xn,obj.xs] = mapminmax(x);
-            %[yn,obj.ys] = mapminmax(fx);
+            [xn,obj.xs] = mapminmax(x);
+            [yn,obj.ys] = mapminmax(fx);
 
-            xn = x;
-            yn = fx;
 
             obj.fnet.trainParam.showWindow = true;
             
@@ -126,9 +124,9 @@ classdef Proxy
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function ftx = EvalProxy(obj, x)
             N = network(obj.fnet) ;
-            %xmap = (mapminmax('apply', x, obj.xs)) ;
+            xmap = (mapminmax('apply', x, obj.xs)) ;
             xmap = x;
-            %ftx = mapminmax('reverse', N(xmap, 'UseGPU', obj.EnableGPUComp), obj.ys) ;
+            ftx = mapminmax('reverse', N(xmap, 'UseGPU', obj.EnableGPUComp), obj.ys) ;
             ftx = N(xmap, 'UseGPU', obj.EnableGPUComp);
         end
         

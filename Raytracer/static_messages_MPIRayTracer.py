@@ -27,7 +27,7 @@ with torch.no_grad():
     if rank == 0:
         weights = scio.loadmat("../MATLABtest/volume_weights_v2.mat")
 
-        qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"])
+        qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"], False, weights["yoffset"], weights["ymin"], weights["yrange"])
 
         marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), "../fluid_data_0083_numpy_array.npy")
 

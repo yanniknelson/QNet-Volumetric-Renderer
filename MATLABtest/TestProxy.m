@@ -29,10 +29,10 @@ fv{3} = @(x) (x<.5).*sin(20*pi*x) + (x>.175).*(x<.625)*.5 + (x>.7).*cos(5*pi*x) 
 fv{4} = @(x) sin(8*pi*x) >0 ;                                                       % test function 4
 
 % settings
-k = 500 ;               % number of neurons 
+k = 400 ;               % number of neurons 
 nbatches = 1;         % set >1 if training data will not fit in memory
 nreps = 1;             % Repeat training procedure with iterative re-initialization
-nepochs = 50;           % Need more epochs if the function is difficult to learn
+nepochs = 20;           % Need more epochs if the function is difficult to learn
 useGPU = 'no' ;        % 'yes' is Only beneficial if N and k are large
 
 load('volume_data.mat');
@@ -42,8 +42,8 @@ y = a(:, 4)';
 disp(size(x))
 disp(size(y))
 
-data = (x(:,x(3,:) == 0));
-expec = reshape(y(x(3,:) == 0), 117,117);
+data = (x(:,x(1,:) == 0));
+expec = reshape(y(x(1,:) == 0), 63,117);
 disp(size(data));
 
 imagesc(expec);
@@ -56,16 +56,21 @@ trainst = tic ;
     p = Proxy(x,y,k,nbatches,nreps,nepochs,useGPU) ; % proxy object p
 traintime = toc(trainst) ;
 
-res = reshape(p.EvalProxy(data), 117, 117);
+res = reshape(p.EvalProxy(data), 63, 117);
 
 pw1 = p.w1;
 pb1 = p.b1;
 pw2 = p.w2;
 pb2 = p.b2;
+yoffset = p.ys.xoffset;
+ymin = p.ys.ymin;
+yrange = p.ys.gain;
 
-%save('volume_weights_v', 'pw1', 'pb1', 'pw2', 'pb2')
+
+%save('volume_weights_v', 'pw1', 'pb1', 'pw2', 'pb2', 'ymin', 'yrange', 'yoffset')
 
 
 
 disp(size(res));
-imagesc(res);
+disp(min(min(res)))
+surf(res);

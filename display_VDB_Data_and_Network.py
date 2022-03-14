@@ -5,9 +5,7 @@ import numpy as np
 from matplotlib.widgets import Slider
 import scipy.io as scio
 
-df = pd.read_pickle("fluid_data_0083_dataframe.pkl")
-
-weights = scio.loadmat("MATLABtest/volume_weights_v2.mat")
+weights = scio.loadmat("MATLABtest/volume_weights_v3.mat")
 pw1 = weights["pw1"]
 pb1 = weights["pb1"]
 pw2 = weights["pw2"]
@@ -32,11 +30,17 @@ for i in range(63):
 xslicedata = torch.tensor(xslicedata, dtype=torch.float32)
 yslicedata = torch.tensor(yslicedata, dtype=torch.float32)
 
+array = np.load("fluid_data_0083_numpy_array.npy")
+
+mx = np.max(array)
+mn = np.min(array)
+
+scl = 2/(mx-mn)
+
 
 xres = np.reshape(model(xslicedata).detach().numpy(),(63, 117))
-yres = np.reshape(model(xslicedata).detach().numpy(),(63, 117))
+yres = np.reshape(model(yslicedata).detach().numpy(),(63, 117))
 
-array = np.load("fluid_data_0083_numpy_array.npy")
 
 fig, axs = plt.subplots(2,2)
 
@@ -67,6 +71,7 @@ def update(val):
     yres = np.reshape(model(yslicedata).detach().numpy(),(63, 117))
     print("data min and max: ", np.min(array[int(val)]), np.max(array[int(val)]))
     print("neural min and max: ", np.min(xres), np.max(xres))
+    print("neural scaled min and max: ", (np.min(xres)+1)/scl, (np.max(xres)+1)/scl)
     print()
     plot2.set_data(xres)
     plot4.set_data(yres)
