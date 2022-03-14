@@ -46,6 +46,9 @@ class Intergrator():
         else:
             self.device = torch.device("cpu")
         self.qnet = Qnet(1, self.device)
+        self.rot_180 = rot = torch.tensor(np.array([[-1, 0, 0],[0,-1,0],[0,0,1]]), dtype=type, device=self.device)
+        self.yz_slice = torch.tensor([0,0],dtype=type, device=self.device)
+        self.neg_x_axis = np.array([-1,0,0])
         self.train(W1, B1, W2, B2, map, yoffset, ymin, yrange)
 
     def train(self, W1, B1, W2, B2, map = False, yoffset = None, ymin = None, yrange = None):
@@ -61,32 +64,31 @@ class Intergrator():
         self.model = torch.nn.Linear(W2.size(1),1, dtype=type,device=self.device)
         self.model.weight = torch.nn.Parameter(W2)
         self.model.bias = torch.nn.Parameter(self.baseB2)
+        self.qnet.model[0].weight[1][0] = 0
 
     def IntegrateRay(self, ray, t0, t1):
         segment_length = t1-t0
         #transform weights
-        dir = ray.d/np.linalg.norm(ray.d)
-        b = np.array([1,0,0])
-        rot = np.array([[-1, 0, 0],[0,-1,0],[0,0,1]])
-        if np.any(dir != -b):
-            v = np.cross(b, dir)
-            c = dir[0] # dir dot b (will select the first element of b, so skip calculation)
-            skew = np.array([[0, -v[2], v[1]],[v[2],0,-v[0]],[-v[1], v[0], 0]])
-            rot = np.eye(3) + skew + np.dot(skew, skew)/(1+c)
-        rot = torch.tensor(rot, dtype=type, device=self.device)
+        dir = ray.d#/np.linalg.norm(ray.d)
+        if np.any(dir != self.neg_x_axis):
+            skew = np.array([[0, -dir[1], -dir[2]], [dir[1], 0, 0], [dir[2], 0, 0]])
+            rot = torch.tensor(np.eye(3) + skew + np.dot(skew, skew)/(1+dir[0]), dtype=type, device=self.device)
+            W1 = torch.matmul(self.baseW1, rot)
+        else:
+            W1 = torch.matmul(self.baseW1, self.rot_180)
+            
         c = torch.tensor(ray.o + ray.d * t0, dtype=type, device=self.device)
         B1 = self.baseB1 + torch.matmul(self.baseW1, c)
-        W1 = torch.matmul(self.baseW1, rot)
+        
         #slice
         xDim = W1[:,:1] # get the x weights 
         yzDims = W1[:, 1:] # get the z and y weights
-        newb1 = B1 + yzDims.matmul(torch.tensor([0,0],dtype=type, device=self.device)) # update bais
+        newb1 = B1 + yzDims.matmul(self.yz_slice) # update bais
         #intergrate over interval [0, t1-t0]
-        self.qnet.model[0].weight[0][0] = -(segment_length)
-        self.qnet.model[0].weight[1][0] = 0
+        self.qnet.model[0].weight[0][0] = -segment_length
         #integrate
         y = torch.cat((xDim, newb1.reshape(xDim.size(0),1)), axis=1)
-        res = torch.div(self.qnet(y), torch.prod(xDim, axis = 1).reshape(xDim.size(0),1)) + (segment_length)
-        self.model.bias = torch.nn.Parameter(self.baseB2*(segment_length))
+        res = torch.div(self.qnet(y), torch.prod(xDim, axis = 1).reshape(xDim.size(0),1)) + segment_length
+        self.model.bias = torch.nn.Parameter(self.baseB2*segment_length)
         return (self.model(res.T) + segment_length)/self.yrange
 

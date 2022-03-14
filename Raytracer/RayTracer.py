@@ -8,11 +8,11 @@ import timeit
 
 np.seterr(divide='ignore')
 
-width = 100
-height = 100
+width = 400
+height = 400
 
-pos = np.array([0, 0, 4])
-up = np.array([1,0,0])
+pos = np.array([4, 0, 0])
+up = np.array([0,0,1])
 lookat = np.array([0,0,0])
 
 image = np.zeros((height, width))
@@ -32,7 +32,7 @@ with torch.no_grad():
     vol = Bounds3(np.array([-1,1,1]), np.array([1,-1,-1]))
 
 
-
+    print("qnet start")
     # with alive_bar(width * height) as bar:
     start_time = timeit.default_timer()
     for y in range(height):
@@ -42,11 +42,13 @@ with torch.no_grad():
             if hit:
                 intersectionPoint = ray.o + t0* ray.d
                 # image[y].append(marcher.trace_scaling(intersectionPoint, ray.d))
-                image[y][x] = max(torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item() - 0.5, 0)*(4*0.9)
+                image[y][x] = qnet.IntegrateRay(ray, t0, t1)
                 # bar()
     end_time = timeit.default_timer()
 
 qnet_time = end_time - start_time
+
+print("Qnet render finished in: ", qnet_time, "\nvoxel start")
 
 start_time = timeit.default_timer()
 for y in range(height):
@@ -65,9 +67,10 @@ print("qnet render time = ", qnet_time)
 print("voxel render time = ", voxel_time)
 RMSE = np.sqrt(np.mean((reference-image)**2))
 print("RMSE = ", RMSE)
-print("RE = ", RMSE/np.mean(reference))
 im = axes[0].imshow(image)
 fig.colorbar(im, ax=axes[0])
 rf = axes[1].imshow(reference)
 fig.colorbar(rf, ax=axes[1])
+relativeError = np.mean(np.divide(np.abs(image-reference),(reference + 0.1)))
+print("RE = ", relativeError, flush=True)
 plt.show()

@@ -15,8 +15,8 @@ height = 400
 qnet_time = 0
 voxel_time = 0
 
-pos = np.array([0, 0, 4])
-up = np.array([1,0,0])
+pos = np.array([4, 0, 0])
+up = np.array([0,0,1])
 lookat = np.array([0,0,0])
 
 start_time = None
@@ -71,7 +71,7 @@ with torch.no_grad():
         hit, t0, t1 = vol.intersect(ray)
         if hit:
             intersectionPoint = ray.o + t0* ray.d
-            image[y][x - int(rank*(width/size))] = max(torch.sigmoid((qnet.IntegrateRay(ray, t0, t1) + (t1-t0))/2).item() - 0.5, 0)*(4*0.9)
+            image[y][x - int(rank*(width/size))] = qnet.IntegrateRay(ray, t0, t1)
 
 img = comm.gather(image, root=0)
 
@@ -120,9 +120,10 @@ if rank == 0:
     print("voxel render time = ", voxel_time, flush=True)
     RMSE = np.sqrt(np.mean((ref-image)**2))
     print("RMSE = ", RMSE, flush=True)
-    print("RE = ", RMSE/np.mean(ref), flush=True)
     im = axes[0].imshow(np.array(image))
     fig.colorbar(im, ax=axes[0])
     rf = axes[1].imshow(np.array(ref))
     fig.colorbar(rf, ax=axes[1])
+    relativeError = np.mean(np.divide(np.abs(image-ref),(ref + 0.1)))
+    print("RE = ", relativeError, flush=True)
     plt.show()
