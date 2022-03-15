@@ -21,16 +21,18 @@ class Marcher:
         #claculate t values of direction to produce each of the voxel dimension sizes
         deltas = abs(np.divide(self.voxel_size,direction))
 
+        point_relative = point-self.bottom_left
+
         #find the voxel coord of the voxel that contains the point
-        vox_coord = np.floor((point-self.bottom_left)/ self.voxel_size)
+        vox_coord = np.floor(point_relative/ self.voxel_size)
 
-        point_modulo = (point-self.bottom_left) % self.voxel_size
+        point_modulo = point_relative % self.voxel_size
 
-        #find the maximum t vlues for the direction that can be moved before crossing a voxel
         tmaxs = np.full(np.shape(direction), float('inf'))
+
         tmaxs[(direction < 0)] = point_modulo[(direction < 0)]/direction[(direction<0)]
         tmaxs[(direction > 0)] = (self.voxel_size[(direction > 0)] - point_modulo[(direction > 0)])/direction[(direction>0)]
-        tmaxs= np.abs(tmaxs)
+        tmaxs = np.abs(tmaxs)
 
         return vox_coord, steps, deltas, tmaxs
 

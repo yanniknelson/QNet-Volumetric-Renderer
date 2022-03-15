@@ -16,8 +16,8 @@ height = 400
 
 total = width * height
 
-pos = np.array([4, 0, 0])
-up = np.array([0,0,1])
+pos = np.array([0, 0, 4])
+up = np.array([1,0,0])
 lookat = np.array([0,0,0])
 
 start_time = None
@@ -100,7 +100,7 @@ with torch.no_grad():
         if counter[0] < total:
             go_again = True
             start = int(counter[0])
-            counter[0] = int((start + batchsize) % (total+1))
+            counter[0] = min(start + batchsize, total)
         counter_win.Unlock_all()
 
 comm.Barrier()
@@ -129,7 +129,7 @@ while go_again:
         ray = c.GenerateRay(x,y)
         hit, t0, t1 = vol.intersect(ray)
         if hit:
-            ref[y][x] = marcher.trace_scaling(ray.o + t0* ray.d, ray.d)
+            ref[y][x] = marcher.trace_no_scaling(ray.o + t0* ray.d, ray.d)
 
     go_again = False
 
