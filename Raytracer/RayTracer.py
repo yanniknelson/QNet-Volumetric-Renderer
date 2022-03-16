@@ -4,21 +4,19 @@ from Marcher import Marcher
 from Camera import *
 import timeit
 
-
-
 np.seterr(divide='ignore')
 
-width = 400
-height = 400
+width = 40
+height = 40
 
-pos = np.array([0, 0, 4])
-up = np.array([1,0,0])
+pos = np.array([2, 2.5, 2.5])
+up = np.array([0,0,1])
 lookat = np.array([0,0,0])
 
 image = np.zeros((height, width))
 reference = np.zeros((height, width))
 
-marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), "../fluid_data_0083_numpy_array.npy")
+marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), "../volumes/npversions/Blender_cloud.npy")
 
 qnet_time = 0
 voxel_time = 0
@@ -40,10 +38,8 @@ with torch.no_grad():
             ray = c.GenerateRay(x,y)
             hit, t0, t1 = vol.intersect(ray)
             if hit:
-                intersectionPoint = ray.o + t0* ray.d
-                # image[y].append(marcher.trace_scaling(intersectionPoint, ray.d))
                 image[y][x] = qnet.IntegrateRay(ray, t0, t1)
-                # bar()
+
     end_time = timeit.default_timer()
 
 qnet_time = end_time - start_time
@@ -56,7 +52,9 @@ for y in range(height):
         ray = c.GenerateRay(x,y)
         hit, t0, t1 = vol.intersect(ray)
         if hit:
-            reference[y][x] = marcher.trace_scaling(ray.o + t0* ray.d, ray.d)
+            reference[y][x] = marcher.trace_scaling(ray.o + ray.d*t0, ray.d)
+            
+            
 end_time = timeit.default_timer()
 
 voxel_time = end_time - start_time

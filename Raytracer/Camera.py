@@ -1,7 +1,9 @@
 from Transforms import *
 
 class Camera:
-    def __init__(self, height, width, fov, pos, up, lookat):
+    def __init__(self, height=None, width=None, fov=None, pos=None, up=None, lookat=None):
+        if (height is None):
+            return
         asprat = width/height
         if (asprat > 1):
             pMin = [-asprat, -1]

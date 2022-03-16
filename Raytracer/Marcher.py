@@ -15,6 +15,7 @@ class Marcher:
         pass
 
     def get_containing_voxel(self, point, direction):
+        point = np.round(point, 15)
         #calculate the steps for the direction
         steps = (direction < 0) * -2 + 1
 
@@ -29,7 +30,7 @@ class Marcher:
         point_modulo = point_relative % self.voxel_size
 
         tmaxs = np.full(np.shape(direction), float('inf'))
-
+        
         tmaxs[(direction < 0)] = point_modulo[(direction < 0)]/direction[(direction<0)]
         tmaxs[(direction > 0)] = (self.voxel_size[(direction > 0)] - point_modulo[(direction > 0)])/direction[(direction>0)]
         tmaxs = np.abs(tmaxs)

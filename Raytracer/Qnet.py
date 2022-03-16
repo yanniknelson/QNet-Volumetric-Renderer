@@ -46,9 +46,8 @@ class Intergrator():
         else:
             self.device = torch.device("cpu")
         self.qnet = Qnet(1, self.device)
-        self.rot_180 = rot = torch.tensor(np.array([[-1, 0, 0],[0,-1,0],[0,0,1]]), dtype=type, device=self.device)
+        self.rot_180 = torch.tensor(np.array([[-1, 0, 0],[0,-1,0],[0,0,1]]), dtype=type, device=self.device)
         self.yz_slice = torch.tensor([0,0],dtype=type, device=self.device)
-        self.neg_x_axis = np.array([-1,0,0])
         self.train(W1, B1, W2, B2, map, yoffset, ymin, yrange)
 
     def train(self, W1, B1, W2, B2, map = False, yoffset = None, ymin = None, yrange = None):
@@ -69,8 +68,8 @@ class Intergrator():
     def IntegrateRay(self, ray, t0, t1):
         segment_length = t1-t0
         #transform weights
-        dir = ray.d#/np.linalg.norm(ray.d)
-        if np.any(dir != self.neg_x_axis):
+        dir = ray.d
+        if np.any(dir[0] != -1):
             skew = np.array([[0, -dir[1], -dir[2]], [dir[1], 0, 0], [dir[2], 0, 0]])
             rot = torch.tensor(np.eye(3) + skew + np.dot(skew, skew)/(1+dir[0]), dtype=type, device=self.device)
             W1 = torch.matmul(self.baseW1, rot)
