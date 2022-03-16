@@ -11,8 +11,8 @@ np.seterr(divide='ignore')
 width = 400
 height = 400
 
-pos = np.array([4, 0, 0])
-up = np.array([0,0,1])
+pos = np.array([0, 0, 4])
+up = np.array([1,0,0])
 lookat = np.array([0,0,0])
 
 image = np.zeros((height, width))
@@ -56,8 +56,7 @@ for y in range(height):
         ray = c.GenerateRay(x,y)
         hit, t0, t1 = vol.intersect(ray)
         if hit:
-            intersectionPoint = ray.o + t0* ray.d
-            reference[y][x] = marcher.trace_scaling(intersectionPoint, ray.d)
+            reference[y][x] = marcher.trace_scaling(ray.o + t0* ray.d, ray.d)
 end_time = timeit.default_timer()
 
 voxel_time = end_time - start_time

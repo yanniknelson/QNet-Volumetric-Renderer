@@ -1,5 +1,8 @@
+from ensurepip import version
+from turtle import position
 from matplotlib.pyplot import axes
 from mpi4py import MPI 
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpi4py.util import dtlib
 from Qnet import *
 from Marcher import Marcher
@@ -11,13 +14,13 @@ rank = comm.Get_rank() # get your process ID
 
 np.seterr(divide='ignore')
 
-width = 400
-height = 400
+width = 100
+height = 100
 
 total = width * height
 
-pos = np.array([0, 0, 4])
-up = np.array([1,0,0])
+pos = np.array([4, 4, 2])
+up = np.array([0,0,1])
 lookat = np.array([0,0,0])
 
 start_time = None
@@ -55,14 +58,17 @@ voxel_time = 0
 
 comm.Barrier()
 
+net_version = "v2"
+reference_data = "Blender_cloud"
+
 with torch.no_grad():
 
     if rank == 0:
-        weights = scio.loadmat("../MATLABtest/volume_weights_v2.mat")
+        weights = scio.loadmat(f"../MATLABtest/volume_weights_{net_version}.mat")
 
         qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"], False, weights["yoffset"], weights["ymin"], weights["yrange"])
 
-        marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), "../fluid_data_0083_numpy_array.npy")
+        marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), f"../volumes/npversions/{reference_data}.npy")
 
     else:
         marcher = Marcher()
@@ -129,7 +135,7 @@ while go_again:
         ray = c.GenerateRay(x,y)
         hit, t0, t1 = vol.intersect(ray)
         if hit:
-            ref[y][x] = marcher.trace_no_scaling(ray.o + t0* ray.d, ray.d)
+            ref[y][x] = marcher.trace_scaling(ray.o + t0* ray.d, ray.d)
 
     go_again = False
 
@@ -148,15 +154,35 @@ if rank == 0:
     voxel_time = end_time - start_time
 
 if rank == 0:
+    def colorbar(mappable):
+        last_axes = plt.gca()
+        ax = mappable.axes
+        fig = ax.figure
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        cbar = fig.colorbar(mappable, cax=cax)
+        cbar.set_label('Optical Depth', rotation=270, verticalalignment='baseline')
+        plt.sca(last_axes)
+        return cbar
+    
     fig, axes = plt.subplots(1,2)
+    axes[0].axis('off')
+    axes[1].axis('off')
+    # plt.axis('off')
     print("qnet render time = ", qnet_time, flush=True)
     print("voxel render time = ", voxel_time, flush=True)
     RMSE = np.sqrt(np.mean((ref-image)**2))
     print("RMSE = ", RMSE, flush=True)
-    im = axes[0].imshow(np.array(image))
-    fig.colorbar(im, ax=axes[0])
-    rf = axes[1].imshow(np.array(ref))
-    fig.colorbar(rf, ax=axes[1])
+    axes[0].title.set_text("Q-Net")
+    mn = min(np.min(image), np.min(ref))
+    mx = min(np.max(image), np.max(ref))
+    im = axes[0].imshow(np.array(image), vmin=mn, vmax=mx)
+    colorbar(im)
+    axes[1].title.set_text("Ray Marcher")
+    rf = axes[1].imshow(np.array(ref), vmin=mn, vmax=mx)
+    colorbar(rf)
+    plt.tight_layout()
+    plt.savefig(f"../Renders/{reference_data}_{net_version}_{width}_{height}_{pos[0]}_{pos[1]}_{pos[2]}.svg")
     relativeError = np.mean(np.divide(np.abs(image-ref),(ref + 0.1)))
     print("RE = ", relativeError, flush=True)
     plt.show()

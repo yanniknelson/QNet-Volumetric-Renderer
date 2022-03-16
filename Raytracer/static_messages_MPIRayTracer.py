@@ -91,8 +91,7 @@ for (x, y) in work:
     ray = c.GenerateRay(x,y)
     hit, t0, t1 = vol.intersect(ray)
     if hit:
-        intersectionPoint = ray.o + t0* ray.d
-        ref[y][x - int(rank*(width/size))] = marcher.trace_scaling(intersectionPoint, ray.d)
+        ref[y][x - int(rank*(width/size))] = marcher.trace_scaling(ray.o + t0* ray.d, ray.d)
 
 reference = comm.gather(ref, root=0)
 
