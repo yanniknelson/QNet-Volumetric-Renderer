@@ -1,6 +1,7 @@
 from ensurepip import version
 import os
 from pathlib import Path
+import time
 from turtle import position
 from matplotlib.pyplot import axes
 from mpi4py import MPI 
@@ -55,8 +56,21 @@ counter_win = MPI.Win.Allocate_shared(image_win_size, dtype.Get_size(), comm=com
 buf, itemsize = counter_win.Shared_query(0) 
 counter = np.ndarray(buffer=buf, dtype='d', shape=(1,))
 
-#np.linspace(0,360, int(360//2.5)+1)
-for angle in np.linspace(55+2.5, 360, int((360-(55+2.5))//2.5)+1):
+with torch.no_grad():
+    if rank == 0:
+        weights = scio.loadmat(f"../MATLABtest/{reference_data}_weights_v{net_version}.mat")
+
+        qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"], False, weights["yoffset"], weights["ymin"], weights["yrange"])
+
+        marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), f"../volumes/npversions/{reference_data}.npy")
+    else:
+        marcher = Marcher()
+        qnet = Intergrator()
+
+qnet = comm.bcast(qnet, root=0)
+marcher = comm.bcast(marcher, root=0)
+
+for angle in np.linspace(5, 95, int((95-5)//2.5)+1):
     if rank == 0:
         counter[0] = batchsize * size
 
@@ -78,21 +92,20 @@ for angle in np.linspace(55+2.5, 360, int((360-(55+2.5))//2.5)+1):
     with torch.no_grad():
 
         if rank == 0:
-            weights = scio.loadmat(f"../MATLABtest/{reference_data}_weights_v{net_version}.mat")
+            # weights = scio.loadmat(f"../MATLABtest/{reference_data}_weights_v{net_version}.mat")
 
-            qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"], False, weights["yoffset"], weights["ymin"], weights["yrange"])
+            # qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"], False, weights["yoffset"], weights["ymin"], weights["yrange"])
 
-            marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), f"../volumes/npversions/{reference_data}.npy")
+            # marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), f"../volumes/npversions/{reference_data}.npy")
 
             c = Camera(height, width, 35, pos, up, lookat)
 
         else:
             c = Camera()
-            marcher = Marcher()
-            qnet = Intergrator()
+            # marcher = Marcher()
+            # qnet = Intergrator()
 
-        qnet = comm.bcast(qnet, root=0)
-        marcher = comm.bcast(marcher, root=0)
+        
         c = comm.bcast(c, root=0)
 
         vol = Bounds3(np.array([-1,1,1]), np.array([1,-1,-1]))
@@ -131,7 +144,7 @@ for angle in np.linspace(55+2.5, 360, int((360-(55+2.5))//2.5)+1):
     if rank == 0:
         end_time = MPI.Wtime()
         qnet_time = end_time - start_time
-        print("Qnet render finished in: ", qnet_time,"\nvoxel start", flush=True)
+        print("Qnet render finished", flush=True)#in: ", qnet_time,"\nvoxel start", flush=True)
 
     go_again = True
 
@@ -190,15 +203,15 @@ for angle in np.linspace(55+2.5, 360, int((360-(55+2.5))//2.5)+1):
         print("voxel render time = ", voxel_time, flush=True)
         RMSE = np.sqrt(np.mean((ref-image)**2))
         print("RMSE = ", RMSE, flush=True)
-        relativeError05 = np.mean(np.divide(np.abs(image-ref),(ref + 0.05)))
+        relativeError05 = np.divide(np.abs(image-ref),(ref + 0.05))
         RE05 = np.mean(relativeError05)
-        RESTD05 = np.std(relativeError05)
-        relativeError1 = np.mean(np.divide(np.abs(image-ref),(ref + 0.1)))
+        RESTD05 = np.std(relativeError05, dtype=np.float64)
+        relativeError1 = np.divide(np.abs(image-ref),(ref + 0.1))
         RE1 = np.mean(relativeError1)
-        RESTD1 = np.std(relativeError1)
-        relativeError15 = np.mean(np.divide(np.abs(image-ref),(ref + 0.15)))
+        RESTD1 = np.std(relativeError1, dtype=np.float64)
+        relativeError15 = np.divide(np.abs(image-ref),(ref + 0.15))
         RE15 = np.mean(relativeError15)
-        RESTD15 = np.std(relativeError15)
+        RESTD15 = np.std(relativeError15, dtype=np.float64)
         axes[0].title.set_text("Q-Net")
         mn = min(np.min(image), np.min(ref))
         mx = min(np.max(image), np.max(ref))
