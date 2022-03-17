@@ -55,14 +55,8 @@ counter_win = MPI.Win.Allocate_shared(image_win_size, dtype.Get_size(), comm=com
 buf, itemsize = counter_win.Shared_query(0) 
 counter = np.ndarray(buffer=buf, dtype='d', shape=(1,))
 
-
-
-
-
-
-
-
-for angle in np.linspace(0,360, int(360//2.5)+1):
+#np.linspace(0,360, int(360//2.5)+1)
+for angle in np.linspace(55+2.5, 360, int((360-(55+2.5))//2.5)+1):
     if rank == 0:
         counter[0] = batchsize * size
 
@@ -196,23 +190,33 @@ for angle in np.linspace(0,360, int(360//2.5)+1):
         print("voxel render time = ", voxel_time, flush=True)
         RMSE = np.sqrt(np.mean((ref-image)**2))
         print("RMSE = ", RMSE, flush=True)
-        relativeError = np.mean(np.divide(np.abs(image-ref),(ref + 0.1)))
+        relativeError05 = np.mean(np.divide(np.abs(image-ref),(ref + 0.05)))
+        RE05 = np.mean(relativeError05)
+        RESTD05 = np.std(relativeError05)
+        relativeError1 = np.mean(np.divide(np.abs(image-ref),(ref + 0.1)))
+        RE1 = np.mean(relativeError1)
+        RESTD1 = np.std(relativeError1)
+        relativeError15 = np.mean(np.divide(np.abs(image-ref),(ref + 0.15)))
+        RE15 = np.mean(relativeError15)
+        RESTD15 = np.std(relativeError15)
         axes[0].title.set_text("Q-Net")
         mn = min(np.min(image), np.min(ref))
         mx = min(np.max(image), np.max(ref))
-        im = axes[0].imshow(np.array(image))#, vmin=mn, vmax=mx)
+        im = axes[0].imshow(np.array(image), vmin=mn, vmax=mx)
         colorbar(im)
         axes[1].title.set_text("Ray Marcher")
-        rf = axes[1].imshow(np.array(ref))#, vmin=mn, vmax=mx)
+        rf = axes[1].imshow(np.array(ref), vmin=mn, vmax=mx)
         colorbar(rf)
         plt.tight_layout()
         if not os.path.exists(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/'):
             os.makedirs(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/')
-        plt.savefig(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/{reference_data}_v{net_version}_{width}_{height}_{angularpos[0]}_{angularpos[1]}_{angularpos[2]}.svg")
+        plt.savefig(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/{reference_data}_v{net_version}_{width}_{height}_{angularpos[0]}_{angularpos[1]}_{angularpos[2]}.png")
         fle = Path(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/data.txt")
         fle.touch(exist_ok=True)
         f = open(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/data.txt", 'a')
-        print("RE = ", relativeError, flush=True)
-        f.write(f"{angularpos[1]},{RMSE},{relativeError},{qnet_time},{voxel_time}\n")
+        print("RE =     ", RE05, RE1, RE15, flush=True)
+        print("RESTDS = ",RESTD05, RESTD1, RESTD15, flush=True)
+        f.write(f"{angularpos[1]},{RMSE},{RE05},{RESTD05},{RE1},{RESTD1},{RE15},{RESTD15},{qnet_time},{voxel_time}\n")
         f.close()
         # plt.show()
+ 
