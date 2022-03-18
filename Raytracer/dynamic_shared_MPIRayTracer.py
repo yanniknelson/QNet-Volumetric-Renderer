@@ -1,9 +1,7 @@
-from ensurepip import version
 import os
 from pathlib import Path
-import time
-from turtle import position
-from matplotlib.pyplot import axes
+import matplotlib.pyplot as plt
+# from matplotlib.pyplot import axes
 from mpi4py import MPI 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpi4py.util import dtlib
@@ -23,12 +21,12 @@ height = 400
 net_version = "1"
 reference_data = "Blender_cloud"
 
-exp = "y"
+exp = "x"
 
 total = width * height
 
 
-up = np.array([0,1,0])
+up = np.array([1,0,0])
 lookat = np.array([0,0,0])
 
 start_time = None
@@ -70,7 +68,7 @@ with torch.no_grad():
 qnet = comm.bcast(qnet, root=0)
 marcher = comm.bcast(marcher, root=0)
 
-for angle in np.linspace(37.5, 360, int((360-37.5)//2.5)+1):
+for angle in np.linspace(295, 297.5, int(0//2.5)+1):
     if rank == 0:
         counter[0] = batchsize * size
 
@@ -81,13 +79,17 @@ for angle in np.linspace(37.5, 360, int((360-37.5)//2.5)+1):
 
     comm.Barrier()
 
+
     # pos = [radius, latitude, longitude]
-    angularpos = np.array([4, 0, angle])
+    angularpos = np.array([4, 90, angle])
 
     phi = angularpos[2]*np.pi/180
     theta = angularpos[1]*np.pi/180
 
-    pos = np.array([angularpos[0]*np.sin(phi)*np.cos(theta),angularpos[0]*np.sin(angularpos[2])*np.sin(theta),angularpos[0]*np.cos(phi)])
+    pos = np.array([angularpos[0]*np.sin(phi)*np.cos(theta),angularpos[0]*np.sin(phi)*np.sin(theta),angularpos[0]*np.cos(phi)])
+    if rank == 0:
+        print(angle)
+        print("camera pos = ", pos, flush=True)
 
     with torch.no_grad():
 
@@ -192,6 +194,7 @@ for angle in np.linspace(37.5, 360, int((360-37.5)//2.5)+1):
             cax = divider.append_axes("right", size="5%", pad=0.05)
             cbar = fig.colorbar(mappable, cax=cax)
             cbar.set_label('Optical Depth', rotation=270, verticalalignment='baseline')
+            cbar.ax.yaxis.set_major_formatter(plt.FormatStrFormatter('%.1f'))
             plt.sca(last_axes)
             return cbar
         
@@ -203,6 +206,9 @@ for angle in np.linspace(37.5, 360, int((360-37.5)//2.5)+1):
         print("voxel render time = ", voxel_time, flush=True)
         RMSE = np.sqrt(np.mean((ref-image)**2))
         print("RMSE = ", RMSE, flush=True)
+        relativeError01 = np.divide(np.abs(image-ref),(ref + 0.01))
+        RE01 = np.mean(relativeError01)
+        RESTD01 = np.std(relativeError01, dtype=np.float64)
         relativeError05 = np.divide(np.abs(image-ref),(ref + 0.05))
         RE05 = np.mean(relativeError05)
         RESTD05 = np.std(relativeError05, dtype=np.float64)
@@ -223,13 +229,15 @@ for angle in np.linspace(37.5, 360, int((360-37.5)//2.5)+1):
         plt.tight_layout()
         if not os.path.exists(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/'):
             os.makedirs(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/')
-        plt.savefig(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/{reference_data}_v{net_version}_{width}_{height}_{angularpos[0]}_{angularpos[1]}_{angularpos[2]}.png")
+            os.makedirs(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/Plots')
+        plt.savefig(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/Plots/{reference_data}_v{net_version}_{width}_{height}_{angularpos[0]}_{angularpos[1]}_{angularpos[2]}.png")
         fle = Path(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/data.txt")
         fle.touch(exist_ok=True)
         f = open(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/data.txt", 'a')
-        print("RE =     ", RE05, RE1, RE15, flush=True)
-        print("RESTDS = ",RESTD05, RESTD1, RESTD15, flush=True)
-        f.write(f"{angularpos[2]},{RMSE},{RE05},{RESTD05},{RE1},{RESTD1},{RE15},{RESTD15},{qnet_time},{voxel_time}\n")
+        print("RE =     ", RE01, RE05, RE1, RE15, flush=True)
+        print("RESTDS = ", RESTD01, RESTD05, RESTD1, RESTD15, flush=True)
+        f.write(f"{angularpos[2]},{RMSE},{RE01},{RESTD01},{RE05},{RESTD05},{RE1},{RESTD1},{RE15},{RESTD15},{qnet_time},{voxel_time}\n")
         f.close()
         # plt.show()
+    comm.Barrier()
  

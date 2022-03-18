@@ -1,4 +1,3 @@
-from alive_progress import alive_bar
 from Qnet import *
 from Marcher import Marcher
 from Camera import *
@@ -31,7 +30,6 @@ with torch.no_grad():
 
 
     print("qnet start")
-    # with alive_bar(width * height) as bar:
     start_time = timeit.default_timer()
     for y in range(height):
         for x in range(width):
