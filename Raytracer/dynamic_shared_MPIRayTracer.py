@@ -23,12 +23,12 @@ height = 400
 net_version = "1"
 reference_data = "Blender_cloud"
 
-exp = "z"
+exp = "y"
 
 total = width * height
 
 
-up = np.array([0,0,1])
+up = np.array([0,1,0])
 lookat = np.array([0,0,0])
 
 start_time = None
@@ -70,7 +70,7 @@ with torch.no_grad():
 qnet = comm.bcast(qnet, root=0)
 marcher = comm.bcast(marcher, root=0)
 
-for angle in np.linspace(5, 95, int((95-5)//2.5)+1):
+for angle in np.linspace(37.5, 360, int((360-37.5)//2.5)+1):
     if rank == 0:
         counter[0] = batchsize * size
 
@@ -82,7 +82,7 @@ for angle in np.linspace(5, 95, int((95-5)//2.5)+1):
     comm.Barrier()
 
     # pos = [radius, latitude, longitude]
-    angularpos = np.array([4, angle, 90])
+    angularpos = np.array([4, 0, angle])
 
     phi = angularpos[2]*np.pi/180
     theta = angularpos[1]*np.pi/180
@@ -229,7 +229,7 @@ for angle in np.linspace(5, 95, int((95-5)//2.5)+1):
         f = open(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/data.txt", 'a')
         print("RE =     ", RE05, RE1, RE15, flush=True)
         print("RESTDS = ",RESTD05, RESTD1, RESTD15, flush=True)
-        f.write(f"{angularpos[1]},{RMSE},{RE05},{RESTD05},{RE1},{RESTD1},{RE15},{RESTD15},{qnet_time},{voxel_time}\n")
+        f.write(f"{angularpos[2]},{RMSE},{RE05},{RESTD05},{RE1},{RESTD1},{RE15},{RESTD15},{qnet_time},{voxel_time}\n")
         f.close()
         # plt.show()
  

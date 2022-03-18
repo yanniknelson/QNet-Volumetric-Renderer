@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 def convertToFloat(list):
@@ -39,9 +38,13 @@ def plot_exp(filename):
     plt.tight_layout()
     plt.show()
 
+
     plt.plot(lines[0], lines[9], label="Q-Net Render Time")
     plt.plot(lines[0], lines[8], label="Ray Marcher Render Time")
+    plt.xticks(np.arange(0, 361, 60))
+    plt.ylabel("Render Time")
+    plt.xlabel("Angle around Z axis")
     plt.legend()
     plt.show()
 
-plot_exp("../Renders/Blender_cloud_v1_z_exp_400_400/data.txt")
+plot_exp("../Renders/Blender_cloud_v1_y_exp_400_400/data.txt")
