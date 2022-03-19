@@ -21,12 +21,12 @@ height = 400
 net_version = "1"
 reference_data = "Blender_cloud"
 
-exp = "x"
+exp = "z"
 
 total = width * height
 
 
-up = np.array([1,0,0])
+up = np.array([0,0,1])
 lookat = np.array([0,0,0])
 
 start_time = None
@@ -68,7 +68,10 @@ with torch.no_grad():
 qnet = comm.bcast(qnet, root=0)
 marcher = comm.bcast(marcher, root=0)
 
-for angle in np.linspace(295, 297.5, int(0//2.5)+1):
+start = 215
+end = 260
+
+for angle in np.linspace(start, end, int((end-start)//2.5)+1):
     if rank == 0:
         counter[0] = batchsize * size
 
@@ -79,9 +82,8 @@ for angle in np.linspace(295, 297.5, int(0//2.5)+1):
 
     comm.Barrier()
 
-
     # pos = [radius, latitude, longitude]
-    angularpos = np.array([4, 90, angle])
+    angularpos = np.array([4, angle, 90])
 
     phi = angularpos[2]*np.pi/180
     theta = angularpos[1]*np.pi/180
@@ -94,19 +96,9 @@ for angle in np.linspace(295, 297.5, int(0//2.5)+1):
     with torch.no_grad():
 
         if rank == 0:
-            # weights = scio.loadmat(f"../MATLABtest/{reference_data}_weights_v{net_version}.mat")
-
-            # qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"], False, weights["yoffset"], weights["ymin"], weights["yrange"])
-
-            # marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), f"../volumes/npversions/{reference_data}.npy")
-
             c = Camera(height, width, 35, pos, up, lookat)
-
         else:
             c = Camera()
-            # marcher = Marcher()
-            # qnet = Intergrator()
-
         
         c = comm.bcast(c, root=0)
 
@@ -146,7 +138,7 @@ for angle in np.linspace(295, 297.5, int(0//2.5)+1):
     if rank == 0:
         end_time = MPI.Wtime()
         qnet_time = end_time - start_time
-        print("Qnet render finished", flush=True)#in: ", qnet_time,"\nvoxel start", flush=True)
+        print("Qnet render finished", flush=True)
 
     go_again = True
 
@@ -201,7 +193,6 @@ for angle in np.linspace(295, 297.5, int(0//2.5)+1):
         fig, axes = plt.subplots(1,2)
         axes[0].axis('off')
         axes[1].axis('off')
-        # plt.axis('off')
         print("qnet render time = ", qnet_time, flush=True)
         print("voxel render time = ", voxel_time, flush=True)
         RMSE = np.sqrt(np.mean((ref-image)**2))
@@ -236,7 +227,7 @@ for angle in np.linspace(295, 297.5, int(0//2.5)+1):
         f = open(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/data.txt", 'a')
         print("RE =     ", RE01, RE05, RE1, RE15, flush=True)
         print("RESTDS = ", RESTD01, RESTD05, RESTD1, RESTD15, flush=True)
-        f.write(f"{angularpos[2]},{RMSE},{RE01},{RESTD01},{RE05},{RESTD05},{RE1},{RESTD1},{RE15},{RESTD15},{qnet_time},{voxel_time}\n")
+        f.write(f"{angle},{RMSE},{RE01},{RESTD01},{RE05},{RESTD05},{RE1},{RESTD1},{RE15},{RESTD15},{qnet_time},{voxel_time}\n")
         f.close()
         # plt.show()
     comm.Barrier()

@@ -59,4 +59,4 @@ def plot_exp(filename):
     plt.legend()
     plt.show()
 
-plot_exp("../Renders/Blender_cloud_v1_x_exp_400_400/data.txt")
+plot_exp("../Renders/Blender_cloud_v1_z_exp_400_400/data.txt")
