@@ -51,12 +51,12 @@ def plot_exp(filename):
     plt.show()
 
 
-    plt.plot(lines[0], lines[11], label="Q-Net Render Time")
-    plt.plot(lines[0], lines[10], label="Ray Marcher Render Time")
+    plt.plot(lines[0], lines[11], label="Ray Marcher Render Time")
+    plt.plot(lines[0], lines[10], label="Q-Net Render Time")
     plt.xticks(np.arange(0, 361, 60))
     plt.ylabel("Render Time")
-    plt.xlabel("Angle around X axis")
+    plt.xlabel("Angle around Z axis")
     plt.legend()
     plt.show()
 
-plot_exp("../Renders/Blender_cloud_v1_x_exp_400_400/data.txt")
+plot_exp("../Renders/Blender_cloud_v1_zup-down_exp_400_400/data.txt")
