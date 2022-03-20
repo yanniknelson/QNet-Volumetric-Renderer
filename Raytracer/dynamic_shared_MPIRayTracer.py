@@ -68,8 +68,8 @@ with torch.no_grad():
 qnet = comm.bcast(qnet, root=0)
 marcher = comm.bcast(marcher, root=0)
 
-start = 215
-end = 260
+start = 347.5
+end = 347.5
 
 for angle in np.linspace(start, end, int((end-start)//2.5)+1):
     if rank == 0:
@@ -85,12 +85,15 @@ for angle in np.linspace(start, end, int((end-start)//2.5)+1):
     # pos = [radius, latitude, longitude]
     angularpos = np.array([4, angle, 90])
 
-    phi = angularpos[2]*np.pi/180
     theta = angularpos[1]*np.pi/180
+
+    # angularpos[2] = 90 + np.sin(2*theta)*45
+
+    phi = angularpos[2]*np.pi/180
 
     pos = np.array([angularpos[0]*np.sin(phi)*np.cos(theta),angularpos[0]*np.sin(phi)*np.sin(theta),angularpos[0]*np.cos(phi)])
     if rank == 0:
-        print(angle)
+        print(angularpos)
         print("camera pos = ", pos, flush=True)
 
     with torch.no_grad():
