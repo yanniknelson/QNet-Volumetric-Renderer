@@ -10,10 +10,10 @@ rank = comm.Get_rank() # get your process ID
 
 np.seterr(divide='ignore')
 
-width = 400
-height = 400
+width = 800
+height = 800
 
-pos = np.array([4, 0, 0])
+pos = np.array([4, 4, 2])
 up = np.array([0,0,1])
 lookat = np.array([0,0,0])
 
@@ -38,11 +38,11 @@ with torch.no_grad():
 
     work = None
     if rank == 0:
-        weights = scio.loadmat("../MATLABtest/volume_weights_v2.mat")
+        weights = scio.loadmat("../MATLABtest/Blender_cloud_weights_v2.mat")
         
         qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"], False, weights["yoffset"], weights["ymin"], weights["yrange"])
 
-        marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), "../fluid_data_0083_numpy_array.npy")
+        marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), "../volumes/npversions/Blender_cloud.npy")
 
         work = []
         for w in range(size):
@@ -75,7 +75,7 @@ with torch.no_grad():
         ray = c.GenerateRay(x,y)
         hit, t0, t1 = vol.intersect(ray)
         if hit:
-            image[y][x] = qnet.IntegrateRay(ray, t0, t1)
+            image[y][x] = 1#qnet.IntegrateRay(ray, t0, t1)
 
 comm.Barrier()
 
@@ -93,7 +93,7 @@ for (x, y) in work:
     ray = c.GenerateRay(x,y)
     hit, t0, t1 = vol.intersect(ray)
     if hit:
-        ref[y][x] = marcher.trace_scaling(ray.o + t0* ray.d, ray.d)
+        ref[y][x] = 1 #marcher.trace_scaling(ray.o + t0* ray.d, ray.d)
 
 comm.Barrier()
 
@@ -102,15 +102,17 @@ if rank == 0:
     voxel_time = end_time - start_time
 
 if rank == 0:
-    fig, axes = plt.subplots(1,2)
+    fig, axes = plt.subplots(1,1)
     print("qnet render time = ", qnet_time, flush=True)
     print("voxel render time = ", voxel_time, flush=True)
     RMSE = np.sqrt(np.mean((ref-image)**2))
     print("RMSE = ", RMSE, flush=True)
-    im = axes[0].imshow(np.array(image))
-    fig.colorbar(im, ax=axes[0])
-    rf = axes[1].imshow(np.array(ref))
-    fig.colorbar(rf, ax=axes[1])
-    relativeError = np.mean(np.divide(np.abs(image-ref),(ref + 0.1)))
-    print("RE = ", relativeError, flush=True)
+    axes.axis('off')
+    im = axes.imshow(np.array(image))
+    plt.tight_layout()
+    # fig.colorbar(im, ax=axes[0])
+    # rf = axes[1].imshow(np.array(ref))
+    # fig.colorbar(rf, ax=axes[1])
+    # relativeError = np.mean(np.divide(np.abs(image-ref),(ref + 0.1)))
+    # print("RE = ", relativeError, flush=True)
     plt.show()
