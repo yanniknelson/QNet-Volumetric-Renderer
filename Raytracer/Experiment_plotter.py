@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+exp = "zup-down"
+
 
 def convertToFloat(list):
     ret = []
@@ -17,16 +19,16 @@ def plot_exp(filename):
     fig, axes = plt.subplots(1,4, sharex=True)
     fig.set_figwidth(15)
     axes[0].set_ylabel(r"Relavite Error $\mathrm{mean}\left(\frac{|\mathrm{measured}  - \mathrm{reference}|}{\mathrm{reference} + \mathrm{slack}}\right)$")
-    axes[0].set_xlabel("Angle around X axis")
-    axes[1].set_xlabel("Angle around X axis")
-    axes[2].set_xlabel("Angle around X axis")
-    axes[3].set_xlabel("Angle around X axis")
+    axes[0].set_xlabel("Angle around " + exp[0].upper() + " axis")
+    axes[1].set_xlabel("Angle around " + exp[0].upper() + " axis")
+    axes[2].set_xlabel("Angle around " + exp[0].upper() + " axis")
+    axes[3].set_xlabel("Angle around " + exp[0].upper() + " axis")
     axes[0].set_title("Slack = 0.01")
     axes[1].set_title("Slack = 0.05")
     axes[2].set_title("Slack = 0.1")
     axes[3].set_title("Slack = 0.15")
-    axes[0].xaxis.set_ticks(np.arange(0, 361, 60))
-    max = (np.floor(np.max(lines[2] + lines[3])/0.1)+1)*0.1
+    axes[0].xaxis.set_ticks(np.arange(0, 361, 45))
+    max = 2.2#(np.floor(np.max(lines[2] + lines[3])/0.1)+1)*0.1
     axes[0].set_ylim([0, max])
     axes[1].set_ylim([0, max])
     axes[2].set_ylim([0, max])
@@ -51,12 +53,17 @@ def plot_exp(filename):
     plt.show()
 
 
-    plt.plot(lines[0], lines[11], label="Ray Marcher Render Time")
-    plt.plot(lines[0], lines[10], label="Q-Net Render Time")
-    plt.xticks(np.arange(0, 361, 60))
-    plt.ylabel("Render Time")
-    plt.xlabel("Angle around Z axis")
-    plt.legend()
+    fig, axes = plt.subplots(1,1, sharex=True)
+    # fig.set_figwidth(15)
+    axes.set_xlim([0, 360])
+    axes.plot(lines[0], lines[11], label="Ray Marcher Render Time")
+    axes.plot(lines[0], lines[10], label="Q-Net Render Time")
+    axes.xaxis.set_ticks(np.arange(0, 361, 45))
+    # axes.yaxis.set_ticks(np.arange(-50, 51, 10))
+    axes.set_ylabel("Render Time (s)")
+    axes.set_xlabel("Angle around " + exp[0].upper() + " axis")
+    axes.legend()
+    plt.tight_layout()
     plt.show()
 
-plot_exp("../Renders/Blender_cloud_v1_zup-down_exp_400_400/data.txt")
+plot_exp("../Renders/Blender_cloud_v1_" + exp + "_exp_400_400/data.txt")
