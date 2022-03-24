@@ -89,5 +89,5 @@ class Intergrator():
         y = torch.cat((xDim, newb1.reshape(xDim.size(0),1)), axis=1)
         res = torch.div(self.qnet(y), torch.prod(xDim, axis = 1).reshape(xDim.size(0),1)) + segment_length
         self.model.bias = torch.nn.Parameter(self.baseB2*segment_length)
-        return (self.model(res.T) + segment_length)/self.yrange
+        return (self.model(res.T).cpu() + segment_length)/self.yrange
 
