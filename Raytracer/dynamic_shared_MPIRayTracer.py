@@ -15,8 +15,8 @@ rank = comm.Get_rank() # get your process ID
 
 np.seterr(divide='ignore')
 
-width = 400
-height = 400
+width = 100
+height = 100
 
 net_version = "1"
 reference_data = "Blender_cloud"
@@ -68,10 +68,12 @@ with torch.no_grad():
 qnet = comm.bcast(qnet, root=0)
 marcher = comm.bcast(marcher, root=0)
 
-start = 347.5
-end = 347.5
+start = 0
+end = 360
 
-for angle in np.linspace(start, end, int((end-start)//2.5)+1):
+inc = 5
+
+for angle in np.linspace(start, end, int((end-start)//inc)+1):
     if rank == 0:
         counter[0] = batchsize * size
 

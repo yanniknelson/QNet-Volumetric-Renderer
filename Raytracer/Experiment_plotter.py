@@ -58,10 +58,11 @@ def plot_exp(filename):
 
     fig, axes = plt.subplots(1,1, sharex=True)
     axes.set_xlim([0, 360])
+    axes.set_ylim([0, 5])
     axes.plot(lines[0], lines[11], label="Ray Marcher Render Time")
     axes.plot(lines[0], lines[10], label="Q-Net Render Time")
     axes.xaxis.set_ticks(np.arange(0, 361, 45))
-    axes.yaxis.set_ticks(np.arange(0, 51, 10))
+    axes.yaxis.set_ticks(np.arange(0, 5.5, 0.5))
     axes.set_ylabel("Render Time (s)")
     axes.set_xlabel("Angle around " + exp[0].upper() + " axis")
     axes.legend()
@@ -100,8 +101,10 @@ def plot_gpunt():
 
 def main(argv):
     if argv[0] == "-e":
-        for exp in argv[1:]:
-            plot_exp("../Renders/Blender_cloud_v1_" + exp + "_exp_400_400/data.txt")
+        if argv[1] == "-s":
+            plot_exp(f"../Renders/static_Blender_cloud_v1_{argv[2]}_exp_{argv[3]}_{argv[3]}/data.txt")
+        else:
+            plot_exp(f"../Renders/Blender_cloud_v1_{argv[1]}_exp_{argv[2]}_{argv[2]}/data.txt")
     if argv[0] == "-gputnt":
         plot_gpunt()
 
