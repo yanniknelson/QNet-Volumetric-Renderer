@@ -28,22 +28,37 @@ fv{2} = @(x) (x<.5).*sin(2*pi*x) + (x>.175).*(x<.625)*.5  ;                     
 fv{3} = @(x) (x<.5).*sin(20*pi*x) + (x>.175).*(x<.625)*.5 + (x>.7).*cos(5*pi*x) ;   % test function 3
 fv{4} = @(x) sin(8*pi*x) >0 ;                                                       % test function 4
 
+gpuDevice(1);
+
 % settings
-k = 400 ;               % number of neurons 
-nbatches = 1;         % set >1 if training data will not fit in memory
+k = 600 ;               % number of neurons 
+nbatches = 40;         % set >1 if training data will not fit in memory
 nreps = 1;             % Repeat training procedure with iterative re-initialization
 nepochs = 20;           % Need more epochs if the function is difficult to learn
-useGPU = 'no' ;        % 'yes' is Only beneficial if N and k are large
+useGPU = 'yes' ;        % 'yes' is Only beneficial if N and k are large
 
-load('volume_data.mat');
-x = a(:, 1:3)';
-y = a(:, 4)';
+load('Anim.mat');
+
+disp(a(1,:));
+disp(a(2,:));
+
+
+x = a(:, 1:4)';
+y = a(:, 5)';
 
 disp(size(x))
 disp(size(y))
 
-data = (x(:,x(1,:) == 0));
-expec = reshape(y(x(1,:) == 0), 63,117);
+data = (x(1:3,x(4,:) == -1));
+disp(size(data));
+data = reshape(data, [3, 54,60,102]);
+data = data(:, 26, :, :);
+data = reshape(data, [3, 60*102]);
+disp(size(data));
+expec = reshape(y(x(4,:) == -1), 54,102,60);
+expec = expec(2,:,:);
+disp(size(expec));
+expec = reshape(expec, 102,60);
 disp(size(data));
 
 imagesc(expec);
@@ -67,7 +82,7 @@ ymin = p.ys.ymin;
 yrange = p.ys.gain;
 
 
-%save('volume_weights_v', 'pw1', 'pb1', 'pw2', 'pb2', 'ymin', 'yrange', 'yoffset')
+%save('anim_weights_v1', 'pw1', 'pb1', 'pw2', 'pb2', 'ymin', 'yrange', 'yoffset')
 
 
 

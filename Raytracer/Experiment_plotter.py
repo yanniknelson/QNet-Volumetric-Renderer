@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-exp = "zup-down"
+exp = "x"
 
 
 def convertToFloat(list):
@@ -56,10 +56,11 @@ def plot_exp(filename):
     fig, axes = plt.subplots(1,1, sharex=True)
     # fig.set_figwidth(15)
     axes.set_xlim([0, 360])
+    axes.set_ylim([0, 50])
     axes.plot(lines[0], lines[11], label="Ray Marcher Render Time")
     axes.plot(lines[0], lines[10], label="Q-Net Render Time")
     axes.xaxis.set_ticks(np.arange(0, 361, 45))
-    # axes.yaxis.set_ticks(np.arange(-50, 51, 10))
+    axes.yaxis.set_ticks(np.arange(0, 51, 5))
     axes.set_ylabel("Render Time (s)")
     axes.set_xlabel("Angle around " + exp[0].upper() + " axis")
     axes.legend()

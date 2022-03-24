@@ -1,4 +1,6 @@
+from numpy import zeros_like
 from Ray import *
+from scipy.special import spence
 import scipy.io as scio
 import matplotlib.pyplot as plt
 import torch
@@ -14,6 +16,23 @@ class Poly1(torch.nn.Module):
     def forward(self, x):
         # return poly(1, self.dim)
         return -torch.log(1 - (-torch.exp(x)))
+
+class Poly2(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def spenceExtend(self, x):
+        res = torch.zeros_like(x)
+        gt = torch.gt(x,1)
+        lte = torch.logical_not(gt)
+        if torch.any(gt):
+            res[gt] = torch.pi*torch.pi/3 - self.spenceExtend(1/x[gt]) - torch.log(x[gt])*torch.log(x[gt])/2
+        if torch.any(lte):
+            res[lte] = spence(1-x[lte])
+        return res
+
+    def forward(self, x):
+        return self.spenceExtend(x)
 
 class Qnet(torch.nn.Module):
     def __init__(self, dimension, device):
