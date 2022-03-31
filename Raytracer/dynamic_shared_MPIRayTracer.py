@@ -210,8 +210,11 @@ for angle in np.linspace(start, end, int((end-start)//inc)+1):
             plt.sca(last_axes)
             return cbar
         
+        # fig, axes = plt.subplots(2,2, figsize=(8, 6))
         fig, axes = plt.subplots(1,1)
         # fig.set_figwidth(15)
+        # for ax in axes:
+        #     ax.axis('off')
         axes.axis('off')
         # axes[1].axis('off')
         # axes[2].axis('off')
@@ -237,17 +240,17 @@ for angle in np.linspace(start, end, int((end-start)//inc)+1):
 
 
         print(mn, mx)
-        axes.title.set_text(f"Slack 0.01   MRE={RE01:.4f}")
-        error01 = axes.imshow(np.array(relativeError01))#, vmin=mn, vmax=mx)
+        axes.set_title(f"Absolute Error")
+        error01 = axes.imshow(np.abs(image-ref))#, vmin=mn, vmax=mx)
         colorbar(error01)
-        # axes[1].title.set_text(f"Slack 0.05   MRE={RE05:.4f}")
-        # error05 = axes[1].imshow(np.array(relativeError05), vmin=mn, vmax=mx)
+        # axes[0][1].set_title(f"Slack 0.05   MRE={RE05:.4f}")
+        # error05 = axes[0][1].imshow(np.array(relativeError05), vmin=mn, vmax=mx)
         # colorbar(error05)
-        # axes[2].title.set_text(f"Slack 0.1   MRE={RE1:.4f}")
-        # error1 = axes[2].imshow(np.array(relativeError1), vmin=mn, vmax=mx)
+        # axes[1][0].set_title(f"Slack 0.1   MRE={RE1:.4f}")
+        # error1 = axes[1][0].imshow(np.array(relativeError1), vmin=mn, vmax=mx)
         # colorbar(error1)
-        # axes[3].title.set_text(f"Slack 0.15   MRE={RE15:.4f}")
-        # error15 = axes[3].imshow(np.array(relativeError15), vmin=mn, vmax=mx)
+        # axes[1][1].set_title(f"Slack 0.15   MRE={RE15:.4f}")
+        # error15 = axes[1][1].imshow(np.array(relativeError15), vmin=mn, vmax=mx)
         # colorbar(error15)
         plt.tight_layout()
         # if not os.path.exists(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/'):
