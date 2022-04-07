@@ -90,13 +90,68 @@ def plot_gpunt():
     plt.show()
 
 
+def plot_exp2(filename, exp):
+    f = open(filename, 'r')
+    lines = [convertToFloat(line.rstrip().split(',')) for line in f]
+    f.close()
+    lines = np.array(lines).T
+    fig, axes = plt.subplots(1, sharex=True, sharey=True, figsize=(8, 6))
+    # outer = fig.add_subplot(111, frame_on=False)
+    # outer.tick_params(labelcolor="none", bottom=False, left=False)
+    plt.xlabel("Angle around " + exp[0].upper() + " axis")
+    plt.ylabel(r"Relavite Error $\mathrm{mean}\left(\frac{|\mathrm{measured}  - \mathrm{reference}|}{\mathrm{reference} + \mathrm{slack}}\right)$")
+
+    axes.xaxis.set_ticks(np.arange(0, 361, 45))
+    max = 2.2#(np.floor(np.max(lines[2] + lines[3])/0.1)+1)*0.1
+    axes.set_ylim([0, max])
+    axes.set_xlim([0, 360])
+    axes.yaxis.set_ticks(np.arange(0, max+0.1, 0.2))
+
+
+    axes.set_title("Slack = 0.01")
+
+    axes.plot(lines[0], lines[2], label="Slack = 0.01")
+    axes.fill_between(x=lines[0], y1=np.maximum(lines[2] - lines[3],np.zeros(np.shape(lines[0]))), y2 = lines[2]+lines[3], alpha=0.5)
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_gpunt():
+    gpudata = np.array([convertToFloat(line.rstrip().split(',')) for line in open(f"../Renders/GPUExperiments/GPU/data.txt")]).T
+    nogpudata = np.array([convertToFloat(line.rstrip().split(',')) for line in open(f"../Renders/GPUExperiments/No_GPU/data.txt")]).T
+    fig, axes = plt.subplots(1,1, sharex=True)
+    axes.set_xlim([0, 640**2])
+    axes.set_ylim([0, 640])
+    points = gpudata[0] * gpudata[0]
+    axes.plot(points, gpudata[1], label="GPU")
+    axes.plot(points, nogpudata[1], label="CPU")
+    # axes.xaxis.set_ticks(np.logspace(100, 640**2, 7, endpoint=True, base=4))
+    axes.yaxis.set_ticks(np.arange(0, 641, 40))
+    axes.set_ylabel("Render Time (s)")
+    axes.set_xlabel("Number of Pixels")
+    axes.legend()
+    plt.tight_layout()
+    plt.show()
+
+    fig, axes = plt.subplots(1,1, sharex=True)
+    axes.set_xlim([0, 640**2])
+    axes.set_ylim([0, 19])
+    axes.plot(points, gpudata[1]/nogpudata[1])
+    # axes.xaxis.set_ticks(np.logspace(100, 640**2, 7, base=4))
+    axes.yaxis.set_ticks(np.arange(0, 19.5, 1))
+    axes.set_ylabel("GPU render time / CPU render time")
+    axes.set_xlabel("Number of Pixels")
+    plt.tight_layout()
+    plt.show()
+
+
 
 def main(argv):
     if argv[0] == "-e":
         if argv[1] == "-s":
             plot_exp(f"../Renders/static_{argv[1]}_v1_{argv[3]}_exp_{argv[4]}_{argv[4]}/data.txt", argv[3])
         else:
-            plot_exp(f"../Renders/{argv[1]}_v1_{argv[2]}_exp_{argv[3]}_{argv[3]}/data.txt", argv[2])
+            plot_exp2(f"../Renders/{argv[1]}_v1_{argv[2]}_exp_{argv[3]}_{argv[3]}/data.txt", argv[2])
     if argv[0] == "-gputnt":
         plot_gpunt()
 
