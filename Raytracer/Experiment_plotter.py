@@ -96,7 +96,7 @@ def main(argv):
         if argv[1] == "-s":
             plot_exp(f"../Renders/static_{argv[1]}_v1_{argv[3]}_exp_{argv[4]}_{argv[4]}/data.txt", argv[3])
         else:
-            plot_exp(f"../Renders/{argv[1]}_v2_{argv[2]}_exp_{argv[3]}_{argv[3]}/data.txt", argv[2])
+            plot_exp(f"../Renders/{argv[1]}_v1_{argv[2]}_exp_{argv[3]}_{argv[3]}/data.txt", argv[2])
     if argv[0] == "-gputnt":
         plot_gpunt()
 

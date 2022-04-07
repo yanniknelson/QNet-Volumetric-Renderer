@@ -35,7 +35,7 @@ nreps = 1;             % Repeat training procedure with iterative re-initializat
 nepochs = 20;           % Need more epochs if the function is difficult to learn
 useGPU = 'no' ;        % 'yes' is Only beneficial if N and k are large
 
-load('Frame1.mat');
+load('Frame31.mat');
 x = a(:, 1:3)';
 y = a(:, 4)';
 
@@ -44,9 +44,9 @@ disp(size(y))
 
 disp(a(26, 1:3));
 
-data = (x(:,x(1,:) == (0/(53-1))*2 - 1));
+data = (x(:,x(1,:) == (25/(54-1))*2 - 1));
 disp(size(data));
-expec = reshape(y(x(1,:) == (0/(53-1))*2 - 1), 55,85);
+expec = reshape(y(x(1,:) == (25/(54-1))*2 - 1), 102, 56);
 
 imagesc(expec);
 
@@ -58,7 +58,7 @@ trainst = tic ;
     p = Proxy(x,y,k,nbatches,nreps,nepochs,useGPU) ; % proxy object p
 traintime = toc(trainst) ;
 
-res = reshape(p.EvalProxy(data), 55, 85);
+res = reshape(p.EvalProxy(data), 102, 56);
 
 pw1 = p.w1;
 pb1 = p.b1;
@@ -69,7 +69,7 @@ ymin = p.ys.ymin;
 yrange = p.ys.gain;
 
 
-%save('Frame1_weights_v2', 'pw1', 'pb1', 'pw2', 'pb2', 'ymin', 'yrange', 'yoffset')
+%save('Frame31_weights_v1', 'pw1', 'pb1', 'pw2', 'pb2', 'ymin', 'yrange', 'yoffset')   
 
 
 

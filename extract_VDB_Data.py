@@ -6,7 +6,7 @@ from scipy.io import savemat
 # #export LD_LIBRARY_PATH="/usr/local/lib/python3.8/dist-packages/"
 
 
-filename="Frame1"
+filename="Frame119"
 
 print(f"volumes/{filename}.vdb")
 
@@ -38,7 +38,7 @@ for x in range(size[0]):
 
 mdic = {"a": data, "label": "experiment"}
 
-savemat("volumes/Frame1.mat", mdic)
+savemat(f"volumes/{filename}.mat", mdic)
 
 # plt.imshow(array[np.shape(array)[0]//2])
 # plt.show()

@@ -19,8 +19,8 @@ np.seterr(divide='ignore')
 width = 400
 height = 400
 
-net_version = "2"
-reference_data = "Frame1"
+net_version = "1"
+reference_data = "Frame31"
 
 exp = "y"
 
@@ -79,7 +79,7 @@ with torch.no_grad():
 qnet = comm.bcast(qnet, root=0)
 marcher = comm.bcast(marcher, root=0)
 
-start = 122.5
+start = 0
 end = 360
 
 inc = 2.5
@@ -205,7 +205,7 @@ for angle in np.linspace(start, end, int((end-start)//inc)+1):
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.15)
             cbar = fig.colorbar(mappable, cax=cax)
-            cbar.set_label('Relative Error', rotation=270, verticalalignment='baseline')
+            cbar.set_label('Optical Depth', rotation=270, verticalalignment='baseline')
             # cbar.ax.yaxis.set_major_formatter(plt.FormatStrFormatter('%.1f'))
             plt.sca(last_axes)
             return cbar
