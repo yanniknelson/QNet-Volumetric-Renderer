@@ -31,7 +31,7 @@ lookat = np.array([0,0,0])
 image = np.zeros((height, width))
 reference = np.zeros((height, width))
 
-reference_data = "Blender_cloud"
+reference_data = "Frame1"
 net_version = 1
 
 marcher = Marcher(np.array([-1,-1,-1]), np.array([1,1,1]), f"../volumes/npversions/{reference_data}.npy")
@@ -40,7 +40,9 @@ qnet_time = 0
 voxel_time = 0
 
 for gpu in [False, True]:
+    gpu = not gpu
     GPU = "GPU" if gpu else "No_GPU"
+    print(GPU)
     with torch.no_grad():
         weights = scio.loadmat(f"../MATLABtest/{reference_data}_weights_v{net_version}.mat")
         qnet = Intergrator(weights["pw1"], weights["pb1"], weights["pw2"], weights["pb2"], False, weights["yoffset"], weights["ymin"], weights["yrange"], gpu)
@@ -78,9 +80,10 @@ for gpu in [False, True]:
                 os.makedirs(f'../Renders/GPUExperiments/{GPU}')
             os.makedirs(f'../Renders/GPUExperiments/{GPU}/Renders')
         plt.savefig(f"../Renders/GPUExperiments/{GPU}/Renders/{reference_data}_v{net_version}_{width}_{height}_{pos[0]}_{pos[1]}_{pos[2]}.png")
-        fle = Path(f"../Renders/GPUExperiments/{GPU}/data.txt")
+        print(f"../Renders/GPUExperiments/{GPU}/Renders/{reference_data}_v{net_version}_{width}_{height}_{pos[0]}_{pos[1]}_{pos[2]}.png")
+        fle = Path(f"../Renders/GPUExperiments/{GPU}/{reference_data}_data.txt")
         fle.touch(exist_ok=True)
-        f = open(f"../Renders/GPUExperiments/{GPU}/data.txt", 'a')
+        f = open(f"../Renders/GPUExperiments/{GPU}/{reference_data}_data.txt", 'a')
         f.write(f"{width},{qnet_time}\n")
         f.close()
 

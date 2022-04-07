@@ -19,20 +19,20 @@ np.seterr(divide='ignore')
 width = 400
 height = 400
 
-net_version = "1"
-reference_data = "Blender_cloud"
+net_version = "2"
+reference_data = "Frame1"
 
-exp = "z"
+exp = "y"
 
 total = width * height
 
 
-up = np.array([0,0,1])
+up = np.array([0,1,0])
 lookat = np.array([0,0,0])
 
 start_time = None
 
-batchsize = 10
+batchsize = 400
 
 #create image shared memory
 dtype = MPI.DOUBLE
@@ -79,10 +79,10 @@ with torch.no_grad():
 qnet = comm.bcast(qnet, root=0)
 marcher = comm.bcast(marcher, root=0)
 
-start = 80
-end = 80.5
+start = 122.5
+end = 360
 
-inc = 5
+inc = 2.5
 
 for angle in np.linspace(start, end, int((end-start)//inc)+1):
     if rank == 0:
@@ -96,15 +96,15 @@ for angle in np.linspace(start, end, int((end-start)//inc)+1):
     comm.Barrier()
 
     # pos = [radius, latitude, longitude]
-    angularpos = np.array([4, angle, 90])
+    angularpos = np.array([4, 0, angle])
 
     theta = angularpos[1]*np.pi/180
 
-    angularpos[2] = 90 + np.sin(2*theta)*45
+    # angularpos[2] = 90 + np.sin(2*theta)*45
 
     phi = angularpos[2]*np.pi/180
 
-    pos = np.array([angularpos[0]*np.sin(phi)*np.cos(theta),angularpos[0]*np.sin(phi)*np.sin(theta),angularpos[0]*np.cos(phi)])
+    pos = np.array([angularpos[0]*np.sin(phi)*np.cos(theta), angularpos[0]*np.sin(phi)*np.sin(theta), angularpos[0]*np.cos(phi)])
     if rank == 0:
         print(angularpos)
         print("camera pos = ", pos, flush=True)
@@ -210,13 +210,13 @@ for angle in np.linspace(start, end, int((end-start)//inc)+1):
             plt.sca(last_axes)
             return cbar
         
-        # fig, axes = plt.subplots(2,2, figsize=(8, 6))
-        fig, axes = plt.subplots(1,1)
+        fig, axes = plt.subplots(1,2)
+        # fig, axes = plt.subplots(1,1)
         # fig.set_figwidth(15)
-        # for ax in axes:
-        #     ax.axis('off')
-        axes.axis('off')
-        # axes[1].axis('off')
+        for ax in axes:
+            ax.axis('off')
+        axes[0].axis('off')
+        axes[1].axis('off')
         # axes[2].axis('off')
         # axes[3].axis('off')
         print("qnet render time = ", qnet_time, flush=True)
@@ -235,17 +235,21 @@ for angle in np.linspace(start, end, int((end-start)//inc)+1):
         relativeError15 = np.divide(np.abs(image-ref),(ref + 0.15))
         RE15 = np.mean(relativeError15)
         RESTD15 = np.std(relativeError15, dtype=np.float64)
-        mn = min(np.min(relativeError01), np.min(relativeError05), np.min(relativeError1), np.min(relativeError15))
-        mx = max(np.max(relativeError01), np.max(relativeError05), np.max(relativeError1), np.max(relativeError15))
+
+        mn = min(np.min(image), np.min(ref))
+        mx = min(np.max(image), np.max(ref))
+
+        # mn = min(np.min(relativeError01), np.min(relativeError05), np.min(relativeError1), np.min(relativeError15))
+        # mx = max(np.max(relativeError01), np.max(relativeError05), np.max(relativeError1), np.max(relativeError15))
 
 
         print(mn, mx)
-        axes.set_title(f"Absolute Error")
-        error01 = axes.imshow(np.abs(image-ref))#, vmin=mn, vmax=mx)
+        axes[0].set_title(f"Q-Net")
+        error01 = axes[0].imshow(image, vmin=mn, vmax=mx)
         colorbar(error01)
-        # axes[0][1].set_title(f"Slack 0.05   MRE={RE05:.4f}")
-        # error05 = axes[0][1].imshow(np.array(relativeError05), vmin=mn, vmax=mx)
-        # colorbar(error05)
+        axes[1].set_title(f"Ray Marcher")
+        error05 = axes[1].imshow(ref, vmin=mn, vmax=mx)
+        colorbar(error05)
         # axes[1][0].set_title(f"Slack 0.1   MRE={RE1:.4f}")
         # error1 = axes[1][0].imshow(np.array(relativeError1), vmin=mn, vmax=mx)
         # colorbar(error1)
@@ -253,17 +257,17 @@ for angle in np.linspace(start, end, int((end-start)//inc)+1):
         # error15 = axes[1][1].imshow(np.array(relativeError15), vmin=mn, vmax=mx)
         # colorbar(error15)
         plt.tight_layout()
-        # if not os.path.exists(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/'):
-        #     os.makedirs(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/')
-        #     os.makedirs(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/Plots')
-        # plt.savefig(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/Plots/{reference_data}_v{net_version}_{width}_{height}_{angularpos[0]}_{angularpos[1]}_{angularpos[2]}.png")
-        # fle = Path(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/data.txt")
-        # fle.touch(exist_ok=True)
-        # f = open(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/data.txt", 'a')
-        # print("RE =     ", RE01, RE05, RE1, RE15, flush=True)
-        # print("RESTDS = ", RESTD01, RESTD05, RESTD1, RESTD15, flush=True)
-        # f.write(f"{angle},{RMSE},{RE01},{RESTD01},{RE05},{RESTD05},{RE1},{RESTD1},{RE15},{RESTD15},{qnet_time},{voxel_time}\n")
-        # f.close()
-        plt.show()
+        if not os.path.exists(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/'):
+            os.makedirs(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/')
+            os.makedirs(f'../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/Plots')
+        plt.savefig(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/Plots/{reference_data}_v{net_version}_{width}_{height}_{angularpos[0]}_{angularpos[1]}_{angularpos[2]}.png")
+        fle = Path(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/data.txt")
+        fle.touch(exist_ok=True)
+        f = open(f"../Renders/{reference_data}_v{net_version}_{exp}_exp_{width}_{height}/data.txt", 'a')
+        print("RE =     ", RE01, RE05, RE1, RE15, flush=True)
+        print("RESTDS = ", RESTD01, RESTD05, RESTD1, RESTD15, flush=True)
+        f.write(f"{angle},{RMSE},{RE01},{RESTD01},{RE05},{RESTD05},{RE1},{RESTD1},{RE15},{RESTD15},{qnet_time},{voxel_time}\n")
+        f.close()
+        # plt.show()
     comm.Barrier()
  

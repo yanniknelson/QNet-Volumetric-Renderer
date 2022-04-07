@@ -44,7 +44,7 @@ print("points ", np.shape(points.numpy()), " data", np.shape(data))
 
 res = model(points).detach().numpy()
 
-array = np.load("volumes/npversions/Blender_cloud.npy")
+array = np.load("volumes/npversions/Frame1.npy")
 
 mx = np.max(array)
 mn = np.min(array)
@@ -54,20 +54,6 @@ scl = 2/(mx-mn)
 res = (res + 1)/scl
 
 print(np.mean((res - data)**2))
-
-# mse = torch.nn.MSELoss()
-
-# print(mse(res, torch.tensor(data, dtype=torch.float32)))
-
-# plt.imshow(res.reshape())
-
-# print(np.shape(data))
-# print(np.shape(res))
-
-# res = np.mean((res - data)**2)
-
-# print(res)
-
 
 for i in range(63):
     for j in range(117):
@@ -84,10 +70,10 @@ yres = np.reshape(model(yslicedata).detach().numpy(),(63, 117))
 
 fig, axs = plt.subplots(2,2)
 
-plot1 = axs[0,0].imshow(array[58].T, origin="lower")
+plot1 = axs[0,0].imshow(array[np.shape(array)[0]//2].T, origin="lower")
 plot2 = axs[0,1].imshow(xres, origin="lower")
 
-plot3 = axs[1,0].imshow(array[:][58].T, origin="lower")
+plot3 = axs[1,0].imshow(array[:][np.shape(array)[1]//2].T, origin="lower")
 plot4 = axs[1,1].imshow(yres, origin="lower")
 # ax1.subplots_adjust( bottom=0.25)
 
@@ -96,8 +82,8 @@ slice_slider = Slider(
     ax=axamp,
     label="slice",
     valmin=0,
-    valmax=116,
-    valinit=58
+    valmax=np.shape(array)[0],
+    valinit=np.shape(array)[0]//2
 )
 
 def update(val):
